@@ -1,20 +1,23 @@
 ﻿using System;
-using System.Windows;
-using System.Windows.Media;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Wpf.Ui.Mvvm.Contracts;
+using Wpf.Ui.Common;
+using System.Threading.Tasks;
 
 namespace ProblemMaker;
 
 public partial class MainWindowViewModel : ObservableObject
 {
-    #region Public Constructors
+    #region Public Constructors    
 
-    public MainWindowViewModel(ProblemService problemService)
+    public MainWindowViewModel(ProblemService problemService, ISnackbarService snackbarService, IDialogService dialogService)
     {
         _problemService = problemService;
-        _timer.Interval = TimeSpan.FromSeconds(1);
+        _snackbarService = snackbarService;
+        _dialogService = dialogService;
+        _timer.Interval = TimeSpan.FromSeconds(0.1);
         _timer.Tick += OnTimerTicked;
     }
 
@@ -22,37 +25,19 @@ public partial class MainWindowViewModel : ObservableObject
 
     #region Private Fields
 
-    private const int _maxTickCount = 15;
-
-    private const string _questionGlyph = "\uF142";
-
-    private const string _checkGlyph = "\uE73E";
-
-    private const string _errorGlyph = "\uEDAE";
-
-    private readonly static Brush _questionBrush = new SolidColorBrush(Colors.Black);
-
-    private readonly static Brush _checkBrush = new SolidColorBrush(Colors.Green);
-
-    private readonly static Brush _errorBrush = new SolidColorBrush(Colors.HotPink);
-
-    private readonly ProblemService _problemService;
-    private readonly DispatcherTimer _timer = new();
-
-    [ObservableProperty]
-    private int _tickCount = _maxTickCount;
+    readonly ISnackbarService _snackbarService;
+    readonly IDialogService _dialogService;
+    readonly ProblemService _problemService;
+    readonly DispatcherTimer _timer = new(DispatcherPriority.Normal);
 
     [ObservableProperty]
     Problem? _problem;
 
     [ObservableProperty]
-    string _statusText = _questionGlyph;
-
-    [ObservableProperty]
     string _answerText = string.Empty;
 
     [ObservableProperty]
-    string _countText = "39";
+    string _countText = "10";
 
     [ObservableProperty]
     bool _isStarted = false;
@@ -70,29 +55,32 @@ public partial class MainWindowViewModel : ObservableObject
     int _index = 1;
 
     [ObservableProperty]
-    Brush _statusForeground = _questionBrush;
+    SymbolRegular _submitButtonIcon = SymbolRegular.ArrowUpload24;
 
     #endregion Private Fields
 
     #region Private Methods
 
-    private void OnTimerTicked(object? sender, EventArgs e)
+    void OnTimerTicked(object? sender, EventArgs e)
     {
-        TickCount--;
-        if (TickCount == 0)
+        RemainingTime -= _timer.Interval;
+        if (RemainingTime <= TimeSpan.Zero)
         {
-            MessageBox.Show("超时，跳过此题", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
-            StatusText = _errorGlyph;
-            StatusForeground = _errorBrush;
+            _dialogService.GetDialogControl().Show("警告", "超时，将跳过此题");
             IsSubmited = true;
+            SubmitButtonIcon = SymbolRegular.Next24;
             ResetTimer();
         }
     }
 
+    static readonly TimeSpan _maxTime = TimeSpan.FromSeconds(15);
+    [ObservableProperty]
+    TimeSpan _remainingTime = _maxTime;
+
     void ResetTimer()
     {
         _timer.Stop();
-        TickCount = _maxTickCount;
+        RemainingTime = _maxTime;
     }
     [RelayCommand]
     void Start()
@@ -101,12 +89,12 @@ public partial class MainWindowViewModel : ObservableObject
         {
             if (!int.TryParse(CountText, out var count))
             {
-                MessageBox.Show("输入不合法，必须为整数", "警告", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _snackbarService.Show("警告", "目标题数输入不合法，应为整数", SymbolRegular.Warning28, ControlAppearance.Caution);
                 return;
             }
             if (count < 1 || count > 999)
             {
-                MessageBox.Show("必须在 [1,1000) 范围内", "警告", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _snackbarService.Show("警告", "目标题数应在[1,1000)范围", SymbolRegular.Warning28, ControlAppearance.Caution);
                 return;
             }
             Count = count;
@@ -122,7 +110,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     void Stop()
     {
-        MessageBox.Show($"答题结束，得分为{Point} / {Count}，正确率{100 * Point / Count}%", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+        _dialogService.GetDialogControl().Show("提示", $"答题结束，得分为{Point} / {Count}，正确率{100 * Point / Count}%");
         IsStarted = false;
         Count = 39;
         Index = 1;
@@ -136,22 +124,21 @@ public partial class MainWindowViewModel : ObservableObject
         {
             if (!int.TryParse(AnswerText, out var answer))
             {
-                MessageBox.Show("输入不合法，必须为整数", "警告", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _snackbarService.Show("警告", "答案输入不合法，应为整数", SymbolRegular.Warning28, ControlAppearance.Caution);
                 return;
             }
+            IsSubmited = true;
+            SubmitButtonIcon = SymbolRegular.Next24;
+            ResetTimer();
             if (Problem!.CheckAnswer(answer))
             {
-                StatusText = _checkGlyph;
-                StatusForeground = _checkBrush;
+                _snackbarService.Show("提示", "回答正确", SymbolRegular.Checkmark24, ControlAppearance.Success);
                 Point++;
             }
             else
             {
-                StatusText = _errorGlyph;
-                StatusForeground = _errorBrush;
+                _snackbarService.Show("提示", "回答错误", SymbolRegular.Dismiss24, ControlAppearance.Danger);
             }
-            IsSubmited = true;
-            ResetTimer();
         }
         else
         {
@@ -165,10 +152,9 @@ public partial class MainWindowViewModel : ObservableObject
                 Problem = _problemService.GetNextProblem();
                 _timer.Start();
             }
-            StatusText = _questionGlyph;
-            StatusForeground = _questionBrush;
             AnswerText = string.Empty;
             IsSubmited = false;
+            SubmitButtonIcon = SymbolRegular.ArrowUpload24;
         }
     }
 

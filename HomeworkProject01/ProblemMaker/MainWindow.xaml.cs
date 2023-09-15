@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using Wpf.Ui.Mvvm.Services;
 
 namespace ProblemMaker;
 
@@ -13,6 +14,11 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContext = this;
+        var snackbarService = new SnackbarService();
+        snackbarService.SetSnackbarControl(AnswerFeedbackBar);
+        var dialogService = new DialogService();
+        dialogService.SetDialogControl(Dialog);
+        ViewModel = new(new(), snackbarService, dialogService);
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 
@@ -20,7 +26,8 @@ public partial class MainWindow : Window
 
     #region Public Properties
 
-    public MainWindowViewModel ViewModel { get; } = new(new());
+    public MainWindowViewModel ViewModel { get; }
+
 
     #endregion Public Properties
 
@@ -36,6 +43,8 @@ public partial class MainWindow : Window
                 TargetCountBox.BorderThickness = new();
                 StartButton.Content = "停止";
                 ProblemPanel.Visibility = Visibility.Visible;
+                RemainingTimeLabel.Visibility = Visibility.Visible;
+                RemainingTimeValueLabel.Visibility = Visibility.Visible;
             }
             else
             {
@@ -43,6 +52,8 @@ public partial class MainWindow : Window
                 TargetCountBox.BorderThickness = new(1);
                 StartButton.Content = "开始";
                 ProblemPanel.Visibility = Visibility.Collapsed;
+                RemainingTimeLabel.Visibility = Visibility.Collapsed;
+                RemainingTimeValueLabel.Visibility = Visibility.Collapsed;
             }
         }
         if (e.PropertyName == nameof(MainWindowViewModel.IsSubmited))
@@ -59,4 +70,9 @@ public partial class MainWindow : Window
     }
 
     #endregion Private Methods
+
+    private void OnDialogButtonLeftClick(object sender, RoutedEventArgs e)
+    {
+        Dialog.Hide();
+    }
 }
