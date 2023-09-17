@@ -18,14 +18,9 @@
         <sys:Double x:Key="LargeFontSize">39</sys:Double>
         <sys:Double x:Key="MediumFontSize">24</sys:Double>
         <sys:Double x:Key="SmallFontSize">18</sys:Double>
-        <Style x:Key="CommonLabelStyle" TargetType="{x:Type Label}">
+        <Style x:Key="CommonTextStyle" TargetType="{x:Type TextBlock}">
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="FontSize" Value="{StaticResource SmallFontSize}" />
-        </Style>
-        <Style x:Key="CommonButtonStyle" TargetType="{x:Type Button}">
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="20,10" />
-            <Setter Property="FontSize" Value="20" />
         </Style>
     </Window.Resources>
     <Grid>
@@ -37,6 +32,7 @@
             x:Name="Dialog"
             Grid.RowSpan="2"
             Panel.ZIndex="1000"
+            d:Visibility="Hidden"
             ButtonLeftAppearance="Primary"
             ButtonLeftClick="OnDialogButtonLeftClick"
             ButtonLeftName="继续"
@@ -52,43 +48,45 @@
                 Grid.Column="1"
                 Margin="0,0,39,100"
                 Panel.ZIndex="1000"
+                d:Visibility="Hidden"
                 FontSize="{StaticResource MediumFontSize}"
                 Timeout="4000" />
         </Grid>
 
         <Border Padding="20">
             <StackPanel
-                x:Name="ProblemPanel"
                 d:Visibility="Visible"
                 Orientation="Vertical"
-                Visibility="Collapsed">
-                <Label
-                    d:Content="1+3 ="
-                    Content="{Binding ViewModel.Problem.Text}"
+                Visibility="{Binding ViewModel.QuestionVisibility}">
+                <TextBlock
+                    d:Text="39 + 831 ="
                     FontSize="{StaticResource LargeFontSize}"
-                    Target="{Binding ElementName=AnswerBox}" />
+                    Text="{Binding ViewModel.Question.Text}" />
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <ui:TextBox
-                        x:Name="AnswerBox"
                         VerticalAlignment="Center"
                         FontSize="{StaticResource MediumFontSize}"
                         PlaceholderText="在此输入你的答案..."
-                        Text="{Binding ViewModel.AnswerText}" />
+                        Text="{Binding ViewModel.AnswerText, UpdateSourceTrigger=PropertyChanged}">
+                        <ui:TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding ViewModel.SubmitCommand}" />
+                        </ui:TextBox.InputBindings>
+                    </ui:TextBox>
                     <ui:Button
-                        x:Name="SubmitButton"
                         Grid.Column="1"
                         Margin="10,0"
                         HorizontalAlignment="Center"
+                        d:Content="提交"
                         d:Icon="ArrowUpload16"
                         Appearance="Secondary"
                         Command="{Binding ViewModel.SubmitCommand}"
-                        Content="提交"
+                        Content="{Binding ViewModel.SubmitNextButtonContent}"
                         FontSize="{StaticResource MediumFontSize}"
-                        Icon="{Binding ViewModel.SubmitButtonIcon}" />
+                        Icon="{Binding ViewModel.SubmitNextButtonSymbol}" />
                 </Grid>
             </StackPanel>
         </Border>
@@ -99,60 +97,46 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
-                    <Label
-                        Content="当前题号:"
-                        FontWeight="Bold"
-                        Style="{StaticResource CommonLabelStyle}" />
-                    <Label
-                        d:Content="1"
-                        Content="{Binding ViewModel.Index}"
-                        Style="{StaticResource CommonLabelStyle}" />
-                    <Label
-                        Margin="10,0,0,0"
-                        Content="当前得分:"
-                        FontWeight="Bold"
-                        Style="{StaticResource CommonLabelStyle}" />
-                    <Label
-                        d:Content="1"
-                        Content="{Binding ViewModel.Point}"
-                        Style="{StaticResource CommonLabelStyle}" />
-                    <Label
-                        Margin="10,0,0,0"
-                        Content="目标题数:"
-                        FontWeight="Bold"
-                        Style="{StaticResource CommonLabelStyle}" />
+                    <TextBlock
+                        d:Text="题号：1"
+                        Style="{StaticResource CommonTextStyle}"
+                        Text="{Binding ViewModel.Index, StringFormat='题号：{0}'}"
+                        Visibility="{Binding ViewModel.QuestionVisibility}" />
+                    <TextBlock
+                        Margin="20,0,0,0"
+                        d:Text="得点：1"
+                        Style="{StaticResource CommonTextStyle}"
+                        Text="{Binding ViewModel.Point, StringFormat='得点：{0}'}"
+                        Visibility="{Binding ViewModel.QuestionVisibility}" />
+                    <TextBlock
+                        Margin="20,0,0,0"
+                        Style="{StaticResource CommonTextStyle}"
+                        Text="题数:" />
                     <ui:TextBox
-                        x:Name="TargetCountBox"
                         Width="125"
                         Margin="10,0,0,0"
                         VerticalAlignment="Center"
+                        Focusable="{Binding ViewModel.IsEnded}"
                         FontSize="{StaticResource SmallFontSize}"
                         Text="{Binding ViewModel.CountText}" />
-                    <Label
-                        x:Name="RemainingTimeLabel"
-                        Margin="10,0,0,0"
+                    <TextBlock
+                        Margin="20,0,0,0"
+                        d:Text="剩余时间(s)：15"
                         d:Visibility="Visible"
-                        Content="剩余时间(s):"
-                        FontWeight="Bold"
-                        Style="{StaticResource CommonLabelStyle}"
-                        Visibility="Collapsed" />
-                    <Label
-                        x:Name="RemainingTimeValueLabel"
-                        d:Content="10"
-                        d:Visibility="Visible"
-                        Content="{Binding ViewModel.RemainingTime.Seconds}"
-                        Style="{StaticResource CommonLabelStyle}"
-                        Visibility="Collapsed" />
+                        Style="{StaticResource CommonTextStyle}"
+                        Text="{Binding ViewModel.RemainingTime.Seconds, StringFormat='剩余时间(s)：{0}'}"
+                        Visibility="{Binding ViewModel.QuestionVisibility}" />
                 </StackPanel>
                 <ui:Button
-                    x:Name="StartButton"
                     Grid.Column="1"
                     Margin="10,0"
+                    d:Content="开始"
+                    d:Icon="Play24"
                     Appearance="Primary"
                     Command="{Binding ViewModel.StartCommand}"
-                    Content="开始"
+                    Content="{Binding ViewModel.StartEndButtonContent}"
                     FontSize="{StaticResource MediumFontSize}"
-                    Icon="Play48" />
+                    Icon="{Binding ViewModel.StartEndButtonSymbol}" />
             </Grid>
         </Border>
     </Grid>

@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 
 namespace RandomQuestionGenerator;
-public class Question
+public readonly struct Question
 {
+
     #region Public Properties
 
     public int Left { get; }
@@ -12,16 +13,14 @@ public class Question
 
     public QuestionOperator Operator { get; }
 
-    public string Text
+    public readonly string Text
     {
         get
         {
             var op = '+';
-            if (true)
-            {
-
-            }
-            return $"{Left}{op}{Right} = ";
+            if (Operator == QuestionOperator.Sub)
+                op = '-';
+            return string.Join(' ', Left, op, Right, '=');
         }
     }
 
@@ -37,7 +36,7 @@ public class Question
         return new(left, right, @operator);
     }
 
-    public bool Check(int userResult) => userResult == _operatorFuncDic[Operator](Left, Right);
+    public readonly bool Check(int userResult) => userResult == _operatorFuncDic[Operator](Left, Right);
 
     #endregion Public Methods
 
@@ -62,4 +61,5 @@ public class Question
     }
 
     #endregion Private Constructors
+
 }

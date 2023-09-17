@@ -4,13 +4,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Wpf.Ui.Mvvm.Contracts;
 using Wpf.Ui.Common;
-using System.Threading.Tasks;
+using System.Windows;
 
 namespace RandomQuestionGenerator;
 
 public partial class MainWindowViewModel : ObservableObject
 {
-    #region Public Constructors    
+
+    #region Public Constructors
 
     public MainWindowViewModel(ProblemService problemService, ISnackbarService snackbarService, IDialogService dialogService)
     {
@@ -23,7 +24,26 @@ public partial class MainWindowViewModel : ObservableObject
 
     #endregion Public Constructors
 
+    #region Public Properties
+
+    public bool IsEnded => !IsStarted;
+
+    public Visibility QuestionVisibility => IsStarted ? Visibility.Visible : Visibility.Collapsed;
+
+    public SymbolRegular StartEndButtonSymbol => IsStarted ? SymbolRegular.Stop24 : SymbolRegular.Play24;
+
+    public string StartEndButtonContent => IsStarted ? "结束" : "开始";
+
+    public string SubmitNextButtonContent => IsSubmited ? "继续" : "提交";
+
+    public SymbolRegular SubmitNextButtonSymbol => IsSubmited ? SymbolRegular.Next24 : SymbolRegular.ArrowUpload24;
+
+    #endregion Public Properties
+
     #region Private Fields
+
+    const int _initCount = 10;
+    static readonly TimeSpan _maxTime = TimeSpan.FromSeconds(15);
 
     readonly ISnackbarService _snackbarService;
     readonly IDialogService _dialogService;
@@ -31,40 +51,37 @@ public partial class MainWindowViewModel : ObservableObject
     readonly DispatcherTimer _timer = new(DispatcherPriority.Normal);
 
     [ObservableProperty]
-    Question? _problem;
+    Question _question;
 
     [ObservableProperty]
     string _answerText = string.Empty;
 
     [ObservableProperty]
-    string _countText = "10";
+    string _countText = _initCount.ToString();
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEnded))]
+    [NotifyPropertyChangedFor(nameof(QuestionVisibility))]
+    [NotifyPropertyChangedFor(nameof(StartEndButtonSymbol))]
+    [NotifyPropertyChangedFor(nameof(StartEndButtonContent))]
     bool _isStarted = false;
-
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SubmitNextButtonSymbol))]
+    [NotifyPropertyChangedFor(nameof(SubmitNextButtonContent))]
     bool _isSubmited = false;
-
     [ObservableProperty]
     int _point = 0;
 
-    [ObservableProperty]
     int _count = 0;
 
     [ObservableProperty]
-    int _index = 1;
-
+    int _index = 0;
     [ObservableProperty]
-    SymbolRegular _submitButtonIcon = SymbolRegular.ArrowUpload24;
+    TimeSpan _remainingTime = _maxTime;
 
     #endregion Private Fields
 
     #region Private Methods
-
-    static readonly TimeSpan _maxTime = TimeSpan.FromSeconds(15);
-
-    [ObservableProperty]
-    TimeSpan _remainingTime = _maxTime;
 
     void OnTimerTicked(object? sender, EventArgs e)
     {
@@ -73,7 +90,6 @@ public partial class MainWindowViewModel : ObservableObject
         {
             _dialogService.GetDialogControl().Show("警告", "超时，将跳过此题");
             IsSubmited = true;
-            SubmitButtonIcon = SymbolRegular.Next24;
             ResetTimer();
         }
     }
@@ -97,23 +113,24 @@ public partial class MainWindowViewModel : ObservableObject
                 _snackbarService.Show("警告", "目标题数应在[1,1000)范围", SymbolRegular.Warning28, ControlAppearance.Caution);
                 return;
             }
-            Count = count;
-            Problem = _problemService.Initialize(count);
+            Index++;
+            _count = count;
+            Question = _problemService.Initialize(count);
             IsStarted = true;
             _timer.Start();
         }
         else
-        {
             Stop();
-        }
     }
 
     void Stop()
     {
-        _dialogService.GetDialogControl().Show("提示", $"答题结束，得分为{Point} / {Count}，正确率{100 * Point / Count}%");
+        _dialogService.GetDialogControl().Show("提示", $"答题结束，得分为{Point} / {_count}，正确率{100 * Point / _count}%");
+        AnswerText = string.Empty;
         IsStarted = false;
-        Count = 39;
-        Index = 1;
+        _count = _initCount;
+        Index = 0;
+        Point = 0;
         ResetTimer();
     }
 
@@ -128,35 +145,30 @@ public partial class MainWindowViewModel : ObservableObject
                 return;
             }
             IsSubmited = true;
-            SubmitButtonIcon = SymbolRegular.Next24;
             ResetTimer();
-            if (Problem!.Check(answer))
+            if (Question!.Check(answer))
             {
                 _snackbarService.Show("提示", "回答正确", SymbolRegular.Checkmark24, ControlAppearance.Success);
                 Point++;
             }
             else
-            {
                 _snackbarService.Show("提示", "回答错误", SymbolRegular.Dismiss24, ControlAppearance.Danger);
-            }
         }
         else
         {
             Index++;
-            if (Index > Count)
-            {
+            if (Index > _count)
                 Stop();
-            }
             else
             {
-                Problem = _problemService.GetNextProblem();
+                Question = _problemService.GetNextProblem();
                 _timer.Start();
             }
             AnswerText = string.Empty;
             IsSubmited = false;
-            SubmitButtonIcon = SymbolRegular.ArrowUpload24;
         }
     }
 
     #endregion Private Methods
+
 }
