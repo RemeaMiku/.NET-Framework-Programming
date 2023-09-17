@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using Wpf.Ui.Mvvm.Services;
 
-namespace ProblemMaker;
+namespace RandomQuestionGenerator;
 
 /// <summary>
 /// Interaction logic for MainWindow.xaml

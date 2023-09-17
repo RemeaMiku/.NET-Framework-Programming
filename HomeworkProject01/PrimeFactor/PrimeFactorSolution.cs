@@ -1,7 +1,7 @@
 ﻿using static System.Math;
 namespace PrimeFactor;
 
-internal class Solution
+internal class PrimeFactorSolution
 {
     #region Public Methods
 
@@ -12,14 +12,12 @@ internal class Solution
         var res = true;
         if (num < 1E12)
         {
-            for (long i = 2; i * i <= num; i++)
-            {
+            for (var i = 2L; i * i <= num; i++)
                 if (num % i == 0)
                 {
                     res = false;
                     break;
                 }
-            }
         }
         else
         {
@@ -36,7 +34,7 @@ internal class Solution
     }
     public static IEnumerable<long> FindPrimeFactors(long num)
     {
-        for (long i = 2; i * i <= num; i++)
+        for (var i = 2L; i * i <= num; i++)
         {
             if (num % i == 0)
             {

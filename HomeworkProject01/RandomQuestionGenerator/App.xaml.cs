@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace ProblemMaker
+namespace RandomQuestionGenerator
 {
     /// <summary>
     /// Interaction logic for App.xaml

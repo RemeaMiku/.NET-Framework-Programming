@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace ProblemMaker;
+namespace RandomQuestionGenerator;
 
 public class ProblemService
 {
     #region Public Methods
 
-    public Problem Initialize(int problemCount)
+    public Question Initialize(int problemCount)
     {
         if (problemCount < 1)
         {
@@ -15,11 +15,11 @@ public class ProblemService
         }
         _problems = new(problemCount);
         for (int i = 0; i < problemCount; i++)
-            _problems.Add(Problem.CreateProblem());
+            _problems.Add(Question.Create());
         return _problems[_index];
     }
 
-    public Problem GetNextProblem()
+    public Question GetNextProblem()
     {
         if (_problems is null)
         {
@@ -37,7 +37,7 @@ public class ProblemService
 
     #region Private Fields
 
-    private List<Problem>? _problems;
+    private List<Question>? _problems;
     private int _index = 0;
 
     #endregion Private Fields

@@ -6,7 +6,7 @@ using Wpf.Ui.Mvvm.Contracts;
 using Wpf.Ui.Common;
 using System.Threading.Tasks;
 
-namespace ProblemMaker;
+namespace RandomQuestionGenerator;
 
 public partial class MainWindowViewModel : ObservableObject
 {
@@ -31,7 +31,7 @@ public partial class MainWindowViewModel : ObservableObject
     readonly DispatcherTimer _timer = new(DispatcherPriority.Normal);
 
     [ObservableProperty]
-    Problem? _problem;
+    Question? _problem;
 
     [ObservableProperty]
     string _answerText = string.Empty;
@@ -61,6 +61,11 @@ public partial class MainWindowViewModel : ObservableObject
 
     #region Private Methods
 
+    static readonly TimeSpan _maxTime = TimeSpan.FromSeconds(15);
+
+    [ObservableProperty]
+    TimeSpan _remainingTime = _maxTime;
+
     void OnTimerTicked(object? sender, EventArgs e)
     {
         RemainingTime -= _timer.Interval;
@@ -72,11 +77,6 @@ public partial class MainWindowViewModel : ObservableObject
             ResetTimer();
         }
     }
-
-    static readonly TimeSpan _maxTime = TimeSpan.FromSeconds(15);
-    [ObservableProperty]
-    TimeSpan _remainingTime = _maxTime;
-
     void ResetTimer()
     {
         _timer.Stop();
@@ -130,7 +130,7 @@ public partial class MainWindowViewModel : ObservableObject
             IsSubmited = true;
             SubmitButtonIcon = SymbolRegular.Next24;
             ResetTimer();
-            if (Problem!.CheckAnswer(answer))
+            if (Problem!.Check(answer))
             {
                 _snackbarService.Show("提示", "回答正确", SymbolRegular.Checkmark24, ControlAppearance.Success);
                 Point++;
