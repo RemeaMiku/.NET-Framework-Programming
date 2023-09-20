@@ -1,0 +1,59 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace AtmSimulator.Models;
+
+public class Bank
+{
+    public string Name { get; init; }
+    private readonly List<Account> _accounts = new();
+    public Bank(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name) || name.Length > 30)
+            throw new ArgumentException($"\"{name}\" is not valid name of a bank.");
+        Name = name;
+    }
+
+    public Account? this[string phoneNumber]
+    {
+        get => _accounts.Find(a => a.PhoneNumber == phoneNumber);
+    }
+
+    public Account AddAccount(string phoneNumber, string nameOfHolder, string password)
+    {
+        if (_accounts.Exists(a => a.PhoneNumber == phoneNumber))
+            throw new ArgumentException("This phone number has been registered.");
+        var accountId = _accounts.Count + 1;
+        try
+        {
+            var account = new Account(accountId, phoneNumber, nameOfHolder, password, this);
+            _accounts.Add(account);
+            return account;
+        }
+        catch (ArgumentException e)
+        {
+            throw e;
+        }
+    }
+
+    public Account AddCreditAccount(string phoneNumber, string nameOfHolder, string password, decimal creditLimit)
+    {
+        if (_accounts.Exists(a => a.PhoneNumber == phoneNumber))
+            throw new ArgumentException("This phone number has been registered.");
+        var accountId = _accounts.Count + 1;
+        try
+        {
+            var account = new CreditAccount(accountId, phoneNumber, nameOfHolder, password, this, creditLimit);
+            _accounts.Add(account);
+            return account;
+        }
+        catch (ArgumentException e)
+        {
+            throw e;
+        }
+    }
+}
