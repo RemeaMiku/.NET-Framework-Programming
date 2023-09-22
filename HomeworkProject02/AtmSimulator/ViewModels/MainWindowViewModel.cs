@@ -50,15 +50,15 @@ public partial class MainWindowViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(ProgressbarVisibility))]
     [NotifyPropertyChangedFor(nameof(OperationPanelVisibility))]
     bool _isBusy;
-    public Visibility ProgressbarVisibility => IsBusy ? Visibility.Visible : Visibility.Hidden;
+    public Visibility ProgressbarVisibility => IsBusy ? Visibility.Visible : Visibility.Collapsed;
 
     public Visibility LoginPanelVisibility => HasLogined ? Visibility.Collapsed : Visibility.Visible;
 
     public Visibility OperationPanelVisibility => HasLogined ? Visibility.Visible : Visibility.Collapsed;
 
-    public Visibility CreditVisibility => IsCreditAccount ? Visibility.Visible : Visibility.Hidden;
+    public Visibility CreditVisibility => IsCreditAccount ? Visibility.Visible : Visibility.Collapsed;
 
-    public Visibility LogsVisibility => DisplayLogs ? Visibility.Visible : Visibility.Hidden;
+    public Visibility LogsVisibility => DisplayLogs ? Visibility.Visible : Visibility.Collapsed;
     public string AccountType => IsCreditAccount ? "信用账户" : "普通账户";
 
     [ObservableProperty]

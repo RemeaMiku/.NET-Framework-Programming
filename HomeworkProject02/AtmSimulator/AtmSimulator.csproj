@@ -8,6 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Images\Spectre.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Images\Spectre.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
     <PackageReference Include="WPF-UI" Version="2.1.0" />
   </ItemGroup>

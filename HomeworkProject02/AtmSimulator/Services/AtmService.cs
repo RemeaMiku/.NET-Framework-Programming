@@ -9,19 +9,28 @@ namespace AtmSimulator.Services;
 
 public class AtmService
 {
+    #region Public Fields
+
     public const decimal BigMoneyLimit = 10000M;
-    public class BigMoneyEventArgs : EventArgs
+
+    #endregion Public Fields
+
+    #region Public Constructors
+
+    public AtmService(Atm atm)
     {
-        public Account Account { get; init; }
-        public decimal Amount { get; init; }
-        public BigMoneyEventArgs(Account account, decimal amount)
-        {
-            Account = account;
-            Amount = amount;
-        }
+        _atm = atm;
     }
-    readonly Atm _atm;
-    Account? _account;
+
+    #endregion Public Constructors
+
+    #region Public Events
+
+    public event EventHandler<BigMoneyEventArgs>? BigMoneyFetched;
+
+    #endregion Public Events
+
+    #region Public Methods
 
     public IEnumerable<string> GetBankNames()
     {
@@ -29,7 +38,6 @@ public class AtmService
             yield return bank.Name;
     }
 
-    public event EventHandler<BigMoneyEventArgs>? BigMoneyFetched;
     public async Task<Account?> LoginAsync(string bankName, string phoneNumber, string password)
     {
         var account = default(Account);
@@ -96,8 +104,36 @@ public class AtmService
         _account.WithDrawal(amount);
     }
 
-    public AtmService(Atm atm)
+    #endregion Public Methods
+
+    #region Public Classes
+
+    public class BigMoneyEventArgs : EventArgs
     {
-        _atm = atm;
+        #region Public Constructors
+
+        public BigMoneyEventArgs(Account account, decimal amount)
+        {
+            Account = account;
+            Amount = amount;
+        }
+
+        #endregion Public Constructors
+
+        #region Public Properties
+
+        public Account Account { get; init; }
+        public decimal Amount { get; init; }
+
+        #endregion Public Properties
     }
+
+    #endregion Public Classes
+
+    #region Private Fields
+
+    readonly Atm _atm;
+    Account? _account;
+
+    #endregion Private Fields
 }

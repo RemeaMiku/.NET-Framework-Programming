@@ -13,6 +13,8 @@ namespace AtmSimulator;
 /// </summary>
 public partial class MainWindow : Window
 {
+    #region Public Constructors
+
     public MainWindow()
     {
         InitializeComponent();
@@ -22,7 +24,15 @@ public partial class MainWindow : Window
         ViewModel = new(new(CreateAtm()), snackbarService);
     }
 
+    #endregion Public Constructors
+
+    #region Public Properties
+
     public MainWindowViewModel ViewModel { get; }
+
+    #endregion Public Properties
+
+    #region Private Methods
 
     private static Atm CreateAtm()
     {
@@ -53,6 +63,8 @@ public partial class MainWindow : Window
     {
         ViewModel.Password = (sender as PasswordBox)!.Password;
     }
+
+    #endregion Private Methods
 
 
 }

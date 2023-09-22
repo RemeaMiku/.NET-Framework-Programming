@@ -25,7 +25,11 @@
             x:Name="Snackbar"
             Panel.ZIndex="1000"
             Timeout="4000" />
-        <Border Padding="20">
+        <Image Source="Images/Spectre.jpg" Stretch="UniformToFill" />
+        <Border
+            Padding="20"
+            VerticalAlignment="Center"
+            Background="#AAFFFFFF">
             <Grid>
                 <ProgressBar
                     Width="500"
@@ -35,6 +39,7 @@
                     Visibility="{Binding ViewModel.ProgressbarVisibility}" />
                 <StackPanel
                     Width="400"
+                    Margin="20"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     d:Visibility="Collapsed"

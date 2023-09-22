@@ -8,8 +8,7 @@ namespace AtmSimulator.Models;
 
 public class CreditAccount : Account
 {
-    public decimal CreditLimit { get; init; }
-    public decimal Credit { get; private set; }
+    #region Public Constructors
 
     public CreditAccount(int accountNumber, string idNumber, string nameOfHolder, string password, Bank bank, decimal creditLimit) : base(accountNumber, idNumber, nameOfHolder, password, bank)
     {
@@ -18,6 +17,17 @@ public class CreditAccount : Account
         CreditLimit = creditLimit;
         Credit = creditLimit;
     }
+
+    #endregion Public Constructors
+
+    #region Public Properties
+
+    public decimal CreditLimit { get; init; }
+    public decimal Credit { get; private set; }
+
+    #endregion Public Properties
+
+    #region Public Methods
 
     public override void Deposit(decimal amount)
     {
@@ -54,4 +64,6 @@ public class CreditAccount : Account
         else
             base.WithDrawal(amount);
     }
+
+    #endregion Public Methods
 }
