@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Windows;
 using AtmSimulator.Models;
-using AtmSimulator.Services;
 using AtmSimulator.ViewModels;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Mvvm.Services;
