@@ -16,10 +16,7 @@ namespace AtmSimulator.ViewModels;
 
 public partial class MainWindowViewModel : ObservableObject
 {
-    readonly AtmService _atmService;
-    readonly ISnackbarService _snackbarService;
-    [ObservableProperty]
-    List<string> _bankNames;
+    #region Public Constructors
 
     public MainWindowViewModel(AtmService atmService, ISnackbarService snackbarService)
     {
@@ -30,26 +27,12 @@ public partial class MainWindowViewModel : ObservableObject
         BankName = _bankNames.First();
     }
 
-    private void OnBigMoneyFetched(object? sender, AtmService.BigMoneyEventArgs e)
-    {
-        _snackbarService.Show("大金额提现警告", "将会比一般金额花费更长处理时间，请耐心等待", SymbolRegular.Warning28, ControlAppearance.Caution);
-    }
+    #endregion Public Constructors
 
-    [ObservableProperty]
-    string _phoneNumber = string.Empty;
+    #region Public Properties
 
     public string Password { get; set; } = string.Empty;
 
-    [ObservableProperty]
-    string _bankName;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(LoginPanelVisibility))]
-    bool _hasLogined;
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ProgressbarVisibility))]
-    [NotifyPropertyChangedFor(nameof(OperationPanelVisibility))]
-    bool _isBusy;
     public Visibility ProgressbarVisibility => IsBusy ? Visibility.Visible : Visibility.Collapsed;
 
     public Visibility LoginPanelVisibility => HasLogined ? Visibility.Collapsed : Visibility.Visible;
@@ -59,7 +42,31 @@ public partial class MainWindowViewModel : ObservableObject
     public Visibility CreditVisibility => IsCreditAccount ? Visibility.Visible : Visibility.Collapsed;
 
     public Visibility LogsVisibility => DisplayLogs ? Visibility.Visible : Visibility.Collapsed;
+
     public string AccountType => IsCreditAccount ? "信用账户" : "普通账户";
+
+    #endregion Public Properties
+
+    #region Private Fields
+
+    readonly AtmService _atmService;
+    readonly ISnackbarService _snackbarService;
+    [ObservableProperty]
+    List<string> _bankNames;
+    [ObservableProperty]
+    string _phoneNumber = string.Empty;
+
+    [ObservableProperty]
+    string _bankName;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LoginPanelVisibility))]
+    bool _hasLogined;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ProgressbarVisibility))]
+    [NotifyPropertyChangedFor(nameof(OperationPanelVisibility))]
+    bool _isBusy;
 
     [ObservableProperty]
     string _nameOfAccount = string.Empty;
@@ -88,6 +95,14 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     ObservableCollection<string> _logs = new();
 
+    #endregion Private Fields
+
+    #region Private Methods
+
+    private void OnBigMoneyFetched(object? sender, AtmService.BigMoneyEventArgs e)
+    {
+        _snackbarService.Show("大金额提现警告", "将会比一般金额花费更长处理时间，请耐心等待", SymbolRegular.Warning28, ControlAppearance.Caution);
+    }
     [RelayCommand]
     async Task Login()
     {
@@ -177,4 +192,6 @@ public partial class MainWindowViewModel : ObservableObject
             AmountText = string.Empty;
         }
     }
+
+    #endregion Private Methods
 }
