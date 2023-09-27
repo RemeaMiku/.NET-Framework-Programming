@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Win32;
 using Wpf.Ui.Common;
 using Wpf.Ui.Mvvm.Contracts;
 
@@ -16,13 +11,6 @@ namespace SourceFileFormatter;
 
 public partial class MainWindowViewModel : ObservableObject
 {
-    #region Public Fields
-
-    [ObservableProperty]
-    public string _formattedText = string.Empty;
-
-    #endregion Public Fields
-
     #region Public Constructors
 
     public MainWindowViewModel(SourceFileFormatService sourceFileFormatService, ISnackbarService snackbarService)
@@ -35,43 +23,56 @@ public partial class MainWindowViewModel : ObservableObject
 
     #region Public Properties
 
-    public Visibility ImportPanelVisibility => IsRead ? Visibility.Collapsed : Visibility.Visible;
+    public string Text
+    {
+        get
+        {
+            if (_formatter is null)
+                return string.Empty;
+            return _formatter.Text;
+        }
+    }
 
-    public Visibility StatisticsPanelVisibility => !IsRead ? Visibility.Collapsed : Visibility.Visible;
+    public int LineCount
+    {
+        get
+        {
+            if (_formatter is null)
+                return -1;
+            return _formatter.LineCount;
+        }
+    }
 
-    public Visibility ProgressBarVisibility => !IsBusy ? Visibility.Collapsed : Visibility.Visible;
-
-    public Visibility WordStatisticsVisibility => !IsDisplayingWordStatistics ? Visibility.Collapsed : Visibility.Visible;
-
+    public int WordCount
+    {
+        get
+        {
+            if (_formatter is null)
+                return -1;
+            return _formatter.CountAllWords();
+        }
+    }
     public ObservableCollection<KeyValuePair<string, int>> WordStatistics { get; } = new();
+
+    public bool IsNotRead => !IsRead;
 
     #endregion Public Properties
 
     #region Private Fields
 
+    const string _tip = "将文件拖拽到此或点击选择文件";
+
     readonly SourceFileFormatService _sourceFileFormatService;
     readonly ISnackbarService _snackbarService;
     [ObservableProperty]
-    string _filePath = "将文件拖拽到此或点击选择文件";
+    string _filePath = _tip;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ImportPanelVisibility))]
-    [NotifyPropertyChangedFor(nameof(StatisticsPanelVisibility))]
+    [NotifyPropertyChangedFor(nameof(IsNotRead))]
     bool _isRead = false;
-
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
     bool _isBusy = false;
 
-    [ObservableProperty]
-    bool _isDisplayingWordStatistics = false;
-
-    [ObservableProperty]
-    int _wordCount;
-
-    [ObservableProperty]
-    int _lineCount;
-    [ObservableProperty]
     CSharpSourceFileFormatter? _formatter;
 
     #endregion Private Fields
@@ -81,7 +82,7 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     async Task ReadAsync()
     {
-        if (FilePath == "将文件拖拽到此或点击选择文件")
+        if (FilePath == _tip)
         {
             _snackbarService.Show("读取文件出错", "未选择任何文件", SymbolRegular.Warning28, ControlAppearance.Danger);
             return;
@@ -92,12 +93,13 @@ public partial class MainWindowViewModel : ObservableObject
             var formatter = await _sourceFileFormatService.GetFormatter(FilePath);
             if (formatter is not null)
             {
-                IsRead = true;
-                Formatter = formatter;
-                LineCount = formatter.LineCount;
-                WordCount = formatter.CountAllWords();
+                _formatter = formatter;
+                OnPropertyChanged(nameof(LineCount));
+                OnPropertyChanged(nameof(WordCount));
+                OnPropertyChanged(nameof(Text));
                 foreach (var pair in formatter.WordCountDic)
                     WordStatistics.Add(pair);
+                IsRead = true;
             }
         }
         catch (Exception e)
@@ -112,18 +114,18 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     void Format()
     {
-        if (Formatter is null)
+        if (_formatter is null)
             throw new InvalidOperationException();
         try
         {
             IsBusy = true;
-            Formatter.RemoveEmptyLinesAndSingleLineComments();
-            LineCount = Formatter.LineCount;
-            WordCount = Formatter.CountAllWords();
+            _formatter.RemoveEmptyLinesAndSingleLineComments();
+            OnPropertyChanged(nameof(LineCount));
+            OnPropertyChanged(nameof(WordCount));
+            OnPropertyChanged(nameof(Text));
             WordStatistics.Clear();
-            foreach (var pair in Formatter.WordCountDic)
+            foreach (var pair in _formatter.WordCountDic)
                 WordStatistics.Add(pair);
-            FormattedText = Formatter.Text;
         }
         catch (Exception e)
         {
@@ -133,6 +135,14 @@ public partial class MainWindowViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    [RelayCommand]
+    void Reselect()
+    {
+        _formatter = default;
+        FilePath = _tip;
+        IsRead = false;
     }
 
     #endregion Private Methods

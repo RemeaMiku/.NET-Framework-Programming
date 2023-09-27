@@ -36,12 +36,6 @@ namespace SourceFileFormatter
         {
             var array = e.Data.GetData(DataFormats.FileDrop) as Array;
             ViewModel.FilePath = array!.GetValue(0)!.ToString()!;
-            //var builder = new StringBuilder();
-            //foreach (var item in array!)
-            //{
-            //    builder.AppendLine(item.ToString());
-            //}
-            //MessageBox.Show(builder.ToString());
         }
 
         private void OnSelectButtonClicked(object sender, RoutedEventArgs e)
@@ -57,23 +51,19 @@ namespace SourceFileFormatter
             }
         }
 
-        private void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            FormattedTextBox.MaxHeight = e.NewSize.Height - 400;
-        }
-
         private void OnSaveButtonClicked(object sender, RoutedEventArgs e)
         {
             var dialog = new SaveFileDialog()
             {
                 Title = "另存为",
                 Filter = "C#源文件(*.cs)|*.cs",
+                FileName = ViewModel.FilePath,
             };
             if (dialog.ShowDialog() == true)
             {
                 using var stream = new FileStream(dialog.FileName, FileMode.Create, FileAccess.Write, FileShare.Read);
                 using var writer = new StreamWriter(stream);
-                writer.Write(ViewModel.FormattedText);
+                writer.Write(ViewModel.Text);
             }
         }
 
