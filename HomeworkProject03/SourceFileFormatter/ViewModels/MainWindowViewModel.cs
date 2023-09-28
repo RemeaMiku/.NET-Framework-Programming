@@ -1,4 +1,5 @@
-﻿using System;
+﻿// Author : RemeaMiku (Wuhan University) E-mail : remeamiku@whu.edu.cn
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -12,7 +13,6 @@ namespace SourceFileFormatter;
 
 public partial class MainWindowViewModel : ObservableObject
 {
-
     #region Public Constructors
 
     public MainWindowViewModel(SourceFileFormatService sourceFileFormatService, ISnackbarService snackbarService)
@@ -28,7 +28,9 @@ public partial class MainWindowViewModel : ObservableObject
     public enum WordSortMode
     {
         以先后排序,
+
         以数量升序,
+
         以数量降序,
     }
 
@@ -65,6 +67,7 @@ public partial class MainWindowViewModel : ObservableObject
             return _formatter.CountAllWords();
         }
     }
+
     public ObservableCollection<KeyValuePair<string, int>> WordStatistics { get; } = new();
 
     public bool IsNotRead => !IsRead;
@@ -72,13 +75,13 @@ public partial class MainWindowViewModel : ObservableObject
     public WordSortMode SortMode
     {
         get => _sortMode;
+
         set
         {
             if (_sortMode == value)
                 return;
             _sortMode = value;
             ReorderWordList();
-            OnPropertyChanged(nameof(SortMode));
         }
     }
 
@@ -88,29 +91,32 @@ public partial class MainWindowViewModel : ObservableObject
 
     #region Private Fields
 
-    const string _tip = "将文件拖拽到此或点击选择文件";
+    private const string _tip = "将文件拖拽到此或点击选择文件";
 
-    readonly SourceFileFormatService _sourceFileFormatService;
-    readonly ISnackbarService _snackbarService;
+    private readonly SourceFileFormatService _sourceFileFormatService;
+
+    private readonly ISnackbarService _snackbarService;
+
     [ObservableProperty]
-    string _filePath = _tip;
+    private string _filePath = _tip;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsNotRead))]
-    bool _isRead = false;
+    private bool _isRead = false;
+
     [ObservableProperty]
-    bool _isBusy = false;
+    private bool _isBusy = false;
 
-    CSharpSourceFileFormatter? _formatter;
+    private CSharpSourceFileFormatter? _formatter;
 
-    WordSortMode _sortMode;
+    private WordSortMode _sortMode;
 
     #endregion Private Fields
 
     #region Private Methods
 
     [RelayCommand]
-    async Task ReadAsync()
+    private async Task ReadAsync()
     {
         if (FilePath == _tip)
         {
@@ -140,8 +146,9 @@ public partial class MainWindowViewModel : ObservableObject
             IsBusy = false;
         }
     }
+
     [RelayCommand]
-    void Format()
+    private void Format()
     {
         if (_formatter is null)
             throw new InvalidOperationException();
@@ -164,53 +171,40 @@ public partial class MainWindowViewModel : ObservableObject
             IsBusy = false;
         }
     }
-    void ReorderWordList()
+
+    private void ReorderWordList()
     {
+        if (_formatter is null)
+            throw new InvalidOperationException("The formatter has not been initialized");
         switch (_sortMode)
         {
             case WordSortMode.以先后排序:
-                OrderByOccurrence();
+                ReloadWordList(_formatter.WordCountDic);
                 break;
+
             case WordSortMode.以数量升序:
-                OrderByCountAsc();
+                ReloadWordList(_formatter.WordCountDic.OrderBy((pair) => pair.Value));
                 break;
+
             case WordSortMode.以数量降序:
-                OrderByCountDec();
+                ReloadWordList(_formatter.WordCountDic.OrderByDescending((pair) => pair.Value));
                 break;
+
             default:
                 break;
         }
     }
 
-    void OrderByOccurrence()
+    private void ReloadWordList(IEnumerable<KeyValuePair<string, int>> source)
     {
-        if (_formatter is null)
-            throw new InvalidOperationException();
-        foreach (var pair in _formatter.WordCountDic)
-            WordStatistics.Add(pair);
-    }
-
-
-    void OrderByCountAsc()
-    {
-        if (_formatter is null)
-            throw new InvalidOperationException();
-        WordStatistics.Clear();
-        foreach (var pair in _formatter.WordCountDic.OrderBy((pair) => pair.Value))
-            WordStatistics.Add(pair);
-    }
-
-    void OrderByCountDec()
-    {
-        if (_formatter is null)
-            throw new InvalidOperationException();
-        WordStatistics.Clear();
-        foreach (var pair in _formatter.WordCountDic.OrderByDescending((pair) => pair.Value))
+        if (WordStatistics.Any())
+            WordStatistics.Clear();
+        foreach (var pair in source)
             WordStatistics.Add(pair);
     }
 
     [RelayCommand]
-    void Reselect()
+    private void Reselect()
     {
         _formatter = default;
         FilePath = _tip;
@@ -218,5 +212,4 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     #endregion Private Methods
-
 }
