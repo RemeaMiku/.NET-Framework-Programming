@@ -8,8 +8,25 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Fonts\Ubuntu Mono derivative Powerline.ttf" />
+    <None Remove="Images\Background.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Images\Background.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
     <PackageReference Include="WPF-UI" Version="2.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Fonts\Ubuntu Mono derivative Powerline.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>

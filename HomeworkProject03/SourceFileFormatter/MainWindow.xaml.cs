@@ -2,6 +2,7 @@
 using System.IO;
 using System.Windows;
 using Microsoft.Win32;
+using Wpf.Ui.Common;
 using Wpf.Ui.Mvvm.Services;
 
 namespace SourceFileFormatter
@@ -57,16 +58,25 @@ namespace SourceFileFormatter
             {
                 Title = "另存为",
                 Filter = "C#源文件(*.cs)|*.cs",
-                FileName = ViewModel.FilePath,
+                FileName = Path.GetFileName(ViewModel.FilePath),
             };
             if (dialog.ShowDialog() == true)
             {
-                using var stream = new FileStream(dialog.FileName, FileMode.Create, FileAccess.Write, FileShare.Read);
-                using var writer = new StreamWriter(stream);
-                writer.Write(ViewModel.Text);
+                try
+                {
+                    using var stream = new FileStream(dialog.FileName, FileMode.Create, FileAccess.Write, FileShare.Read);
+                    using var writer = new StreamWriter(stream);
+                    writer.Write(ViewModel.Text);
+                    Snackbar.Show("保存成功", $"已成功保存至{ViewModel.FilePath}", SymbolRegular.Checkmark24, ControlAppearance.Success);
+                }
+                catch (Exception ex)
+                {
+                    Snackbar.Show("保存失败", ex.Message, SymbolRegular.Warning28, ControlAppearance.Danger);
+                }
             }
         }
 
-        #endregion Private Methods
+        #endregion Private Methods      
+
     }
 }

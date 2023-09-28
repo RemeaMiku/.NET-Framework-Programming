@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -11,6 +12,7 @@ namespace SourceFileFormatter;
 
 public partial class MainWindowViewModel : ObservableObject
 {
+
     #region Public Constructors
 
     public MainWindowViewModel(SourceFileFormatService sourceFileFormatService, ISnackbarService snackbarService)
@@ -20,6 +22,17 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     #endregion Public Constructors
+
+    #region Public Enums
+
+    public enum WordSortMode
+    {
+        以先后排序,
+        以数量升序,
+        以数量降序,
+    }
+
+    #endregion Public Enums
 
     #region Public Properties
 
@@ -56,6 +69,21 @@ public partial class MainWindowViewModel : ObservableObject
 
     public bool IsNotRead => !IsRead;
 
+    public WordSortMode SortMode
+    {
+        get => _sortMode;
+        set
+        {
+            if (_sortMode == value)
+                return;
+            _sortMode = value;
+            ReorderWordList();
+            OnPropertyChanged(nameof(SortMode));
+        }
+    }
+
+    public IEnumerable<WordSortMode> WordSortModes { get; } = Enum.GetValues<WordSortMode>();
+
     #endregion Public Properties
 
     #region Private Fields
@@ -75,6 +103,8 @@ public partial class MainWindowViewModel : ObservableObject
 
     CSharpSourceFileFormatter? _formatter;
 
+    WordSortMode _sortMode;
+
     #endregion Private Fields
 
     #region Private Methods
@@ -84,7 +114,7 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (FilePath == _tip)
         {
-            _snackbarService.Show("读取文件出错", "未选择任何文件", SymbolRegular.Warning28, ControlAppearance.Danger);
+            _snackbarService.Show("读取文件失败", "未选择任何文件", SymbolRegular.Warning28, ControlAppearance.Danger);
             return;
         }
         try
@@ -97,14 +127,13 @@ public partial class MainWindowViewModel : ObservableObject
                 OnPropertyChanged(nameof(LineCount));
                 OnPropertyChanged(nameof(WordCount));
                 OnPropertyChanged(nameof(Text));
-                foreach (var pair in formatter.WordCountDic)
-                    WordStatistics.Add(pair);
+                ReorderWordList();
                 IsRead = true;
             }
         }
         catch (Exception e)
         {
-            _snackbarService.Show("读取文件出错", e.Message, SymbolRegular.Warning28, ControlAppearance.Danger);
+            _snackbarService.Show("读取文件失败", e.Message, SymbolRegular.Warning28, ControlAppearance.Danger);
         }
         finally
         {
@@ -124,17 +153,60 @@ public partial class MainWindowViewModel : ObservableObject
             OnPropertyChanged(nameof(WordCount));
             OnPropertyChanged(nameof(Text));
             WordStatistics.Clear();
-            foreach (var pair in _formatter.WordCountDic)
-                WordStatistics.Add(pair);
+            ReorderWordList();
         }
         catch (Exception e)
         {
-            _snackbarService.Show("格式化出错", e.Message, SymbolRegular.Warning28, ControlAppearance.Danger);
+            _snackbarService.Show("格式化失败", e.Message, SymbolRegular.Warning28, ControlAppearance.Danger);
         }
         finally
         {
             IsBusy = false;
         }
+    }
+    void ReorderWordList()
+    {
+        switch (_sortMode)
+        {
+            case WordSortMode.以先后排序:
+                OrderByOccurrence();
+                break;
+            case WordSortMode.以数量升序:
+                OrderByCountAsc();
+                break;
+            case WordSortMode.以数量降序:
+                OrderByCountDec();
+                break;
+            default:
+                break;
+        }
+    }
+
+    void OrderByOccurrence()
+    {
+        if (_formatter is null)
+            throw new InvalidOperationException();
+        foreach (var pair in _formatter.WordCountDic)
+            WordStatistics.Add(pair);
+    }
+
+
+    void OrderByCountAsc()
+    {
+        if (_formatter is null)
+            throw new InvalidOperationException();
+        WordStatistics.Clear();
+        foreach (var pair in _formatter.WordCountDic.OrderBy((pair) => pair.Value))
+            WordStatistics.Add(pair);
+    }
+
+    void OrderByCountDec()
+    {
+        if (_formatter is null)
+            throw new InvalidOperationException();
+        WordStatistics.Clear();
+        foreach (var pair in _formatter.WordCountDic.OrderByDescending((pair) => pair.Value))
+            WordStatistics.Add(pair);
     }
 
     [RelayCommand]
@@ -146,4 +218,5 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     #endregion Private Methods
+
 }
