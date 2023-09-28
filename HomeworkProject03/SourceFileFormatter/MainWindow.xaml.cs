@@ -67,7 +67,7 @@ namespace SourceFileFormatter
                     using var stream = new FileStream(dialog.FileName, FileMode.Create, FileAccess.Write, FileShare.Read);
                     using var writer = new StreamWriter(stream);
                     writer.Write(ViewModel.Text);
-                    Snackbar.Show("保存成功", $"已成功保存至{ViewModel.FilePath}", SymbolRegular.Checkmark24, ControlAppearance.Success);
+                    Snackbar.Show("保存成功", $"已成功保存至{dialog.FileName}", SymbolRegular.Checkmark24, ControlAppearance.Success);
                 }
                 catch (Exception ex)
                 {
