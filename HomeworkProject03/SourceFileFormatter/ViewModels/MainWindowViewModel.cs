@@ -1,5 +1,4 @@
-﻿// Author : RemeaMiku (Wuhan University) E-mail : remeamiku@whu.edu.cn
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
