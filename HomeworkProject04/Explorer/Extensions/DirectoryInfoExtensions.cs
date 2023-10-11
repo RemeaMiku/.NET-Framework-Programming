@@ -9,11 +9,8 @@ namespace Explorer.Extensions;
 
 public static class DirectoryInfoExtensions
 {
-    static readonly EnumerationOptions _options = new()
-    {
-        IgnoreInaccessible = true,
-        RecurseSubdirectories = false,
-    };
+    #region Public Methods
+
     public static bool HasAccessibleSubdirectory(this DirectoryInfo directoryInfo)
     => EnumerateAccessibleDirectories(directoryInfo).Any();
 
@@ -22,9 +19,22 @@ public static class DirectoryInfoExtensions
         foreach (var info in directoryInfo.EnumerateDirectories("*", _options))
             yield return info;
     }
+
     public static IEnumerable<FileInfo> EnumerateAccessibleFiles(this DirectoryInfo directoryInfo)
     {
         foreach (var info in directoryInfo.EnumerateFiles("*", _options))
             yield return info;
     }
+
+    #endregion Public Methods
+
+    #region Private Fields
+
+    static readonly EnumerationOptions _options = new()
+    {
+        IgnoreInaccessible = true,
+        RecurseSubdirectories = false,
+    };
+
+    #endregion Private Fields
 }

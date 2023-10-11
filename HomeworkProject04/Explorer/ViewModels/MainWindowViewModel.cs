@@ -16,7 +16,8 @@ namespace Explorer.ViewModels;
 
 public partial class MainWindowViewModel : ObservableObject
 {
-    readonly ISnackbarService _snackbarService;
+    #region Public Constructors
+
     public MainWindowViewModel(ISnackbarService snackbarService)
     {
         _snackbarService = snackbarService;
@@ -33,26 +34,43 @@ public partial class MainWindowViewModel : ObservableObject
         TreeViewItemViewModel.Root.IsSelected = true;
     }
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsNotBusy))]
-    bool _isBusy;
+    #endregion Public Constructors
 
-    readonly Stack<TreeViewItemViewModel> _backStack = new();
-    readonly Stack<TreeViewItemViewModel> _forwardStack = new();
-
-    const string _ready = "准备就绪";
-
-    [ObservableProperty]
-    string _statusInfo = _ready;
+    #region Public Properties
 
     public bool IsNotBusy => !IsBusy;
-
-    [ObservableProperty]
-    TreeViewItemViewModel _currentItemViewModel = TreeViewItemViewModel.Empty;
 
     public ObservableCollection<TreeViewItemViewModel> Items { get; } = new();
 
     public ObservableCollection<TreeViewItemViewModel> Roots { get; } = new();
+
+    #endregion Public Properties
+
+    #region Private Fields
+
+    const string _ready = "准备就绪";
+
+    readonly ISnackbarService _snackbarService;
+    readonly Stack<TreeViewItemViewModel> _backStack = new();
+
+    readonly Stack<TreeViewItemViewModel> _forwardStack = new();
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNotBusy))]
+    bool _isBusy;
+    [ObservableProperty]
+    string _statusInfo = _ready;
+    [ObservableProperty]
+    TreeViewItemViewModel _currentItemViewModel = TreeViewItemViewModel.Empty;
+    [ObservableProperty]
+    bool _isBackButtonEnabled;
+
+    [ObservableProperty]
+    bool _isForwordButtonEnabled;
+
+    #endregion Private Fields
+
+    #region Private Methods
 
     void OnTreeViewItemExpanding(TreeViewItemViewModel itemViewModel)
     {
@@ -119,6 +137,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     void RunProcess(string path)
     {
+        StatusInfo = $"正在打开：{path}";
         var process = new Process();
         process.StartInfo.FileName = path;
         process.StartInfo.UseShellExecute = true;
@@ -148,12 +167,6 @@ public partial class MainWindowViewModel : ObservableObject
         foreach (var viewModel in viewModels)
             Items.Add(viewModel);
     }
-
-    [ObservableProperty]
-    bool _isBackButtonEnabled;
-    [ObservableProperty]
-    bool _isForwordButtonEnabled;
-
     void PushForwordStack(TreeViewItemViewModel viewItemViewModel)
     {
         if (!IsForwordButtonEnabled)
@@ -187,4 +200,6 @@ public partial class MainWindowViewModel : ObservableObject
         PushBackStack(CurrentItemViewModel);
         await OnItemSelectedAsync(PopForwordStack(), false);
     }
+
+    #endregion Private Methods
 }

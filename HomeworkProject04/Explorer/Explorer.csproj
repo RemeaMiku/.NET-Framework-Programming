@@ -8,13 +8,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
-    <PackageReference Include="WPF-UI" Version="2.1.0" />
+    <None Remove="Images\background.jpg" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Services\" />
+    <Content Include="Images\background.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+    <PackageReference Include="WPF-UI" Version="2.1.0" />
   </ItemGroup>
 
 </Project>

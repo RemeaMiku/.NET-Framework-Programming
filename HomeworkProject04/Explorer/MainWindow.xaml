@@ -1,15 +1,15 @@
 ﻿<Window
     x:Class="Explorer.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:cv="clr-namespace:Explorer.Converters"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:Explorer"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:Explorer"
+    xmlns:cv="clr-namespace:Explorer.Converters"
     xmlns:vw="clr-namespace:Explorer.ViewModels"
-    Title="资源管理器"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    Title="{Binding ViewModel.CurrentItemViewModel.FullPath}"
     Width="800"
     Height="450"
     MinWidth="800"
@@ -22,8 +22,9 @@
         <sys:Double x:Key="MediumFontSize">24</sys:Double>
         <sys:Double x:Key="SmallFontSize">18</sys:Double>
         <cv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <SolidColorBrush x:Key="ForegroundBrush" Color="#00b7c3" />
     </Window.Resources>
-    <Grid Margin="10,0" IsEnabled="{Binding ViewModel.IsNotBusy}">
+    <Grid Background="{ui:ThemeResource}" IsEnabled="{Binding ViewModel.IsNotBusy}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -37,9 +38,55 @@
             Timeout="4000" />
         <StackPanel Orientation="Vertical">
             <Menu VerticalAlignment="Top">
-                <ui:MenuItem Header="文件" SymbolIcon="Document24" />
+                <ui:MenuItem Foreground="{StaticResource ForegroundBrush}" Header="文件(_F)">
+                    <ui:MenuItem
+                        Click="OnFileMenuItemClicked"
+                        Header="打开新实例(_N)"
+                        SymbolIcon="WindowNew24"
+                        Tag="{Binding RunNewInstanceAction}" />
+                    <ui:MenuItem
+                        Click="OnFileMenuItemClicked"
+                        Header="关闭(_C)"
+                        SymbolIcon="Dismiss24"
+                        Tag="{Binding CloseAction}" />
+                </ui:MenuItem>
+                <ui:MenuItem Foreground="{StaticResource ForegroundBrush}" Header="视图(_V)">
+                    <ui:MenuItem
+                        Checked="OnViewMenuItemChecked"
+                        Header="导航窗格"
+                        IsCheckable="True"
+                        IsChecked="True"
+                        SymbolIcon="TextBulletListTree24"
+                        Tag="{Binding ElementName=NavigationView}"
+                        Unchecked="OnViewMenuItemUnchecked" />
+                    <ui:MenuItem
+                        Checked="OnViewMenuItemChecked"
+                        Header="工具栏"
+                        IsCheckable="True"
+                        IsChecked="True"
+                        SymbolIcon="Toolbox24"
+                        Tag="{Binding ElementName=ToolBoxView}"
+                        Unchecked="OnViewMenuItemUnchecked" />
+                    <ui:MenuItem
+                        Checked="OnViewMenuItemChecked"
+                        Header="状态栏"
+                        IsCheckable="True"
+                        IsChecked="True"
+                        SymbolIcon="Info24"
+                        Tag="{Binding ElementName=StatusView}"
+                        Unchecked="OnViewMenuItemUnchecked" />
+                </ui:MenuItem>
+                <ui:MenuItem Foreground="{StaticResource ForegroundBrush}" Header="选项(_O)">
+                    <ui:MenuItem
+                        Checked="OnOptionMenuItemChecked"
+                        Header="黑色主题"
+                        IsCheckable="True"
+                        IsChecked="False"
+                        SymbolIcon="WeatherMoon24"
+                        Unchecked="OnOptionMenuItemUnchecked" />
+                </ui:MenuItem>
             </Menu>
-            <Grid>
+            <Grid x:Name="ToolBoxView" Margin="10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -62,20 +109,27 @@
                     Margin="10,0,0,0"
                     HorizontalAlignment="Stretch"
                     d:Text="D:\RemeaMiku study\course in progress\.NET 架构程序设计\HomeworkProject04"
-                    Focusable="False"
                     IsReadOnly="True"
                     Text="{Binding ViewModel.CurrentItemViewModel.FullPath, Mode=OneWay}" />
             </Grid>
         </StackPanel>
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="1" Margin="10,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition
+                    x:Name="NavigationPanel"
                     Width="200"
                     MinWidth="100"
                     MaxWidth="400" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
+            <Image
+                Grid.ColumnSpan="2"
+                Opacity="0.39"
+                Source="Images/background.jpg"
+                Stretch="UniformToFill" />
             <TreeView
+                x:Name="NavigationView"
+                Padding="10"
                 ItemsSource="{Binding ViewModel.Roots}"
                 VirtualizingPanel.IsVirtualizing="True"
                 VirtualizingPanel.VirtualizationMode="Recycling">
@@ -102,33 +156,35 @@
                     <DataTemplate DataType="vw:TreeViewItemViewModel">
                         <StackPanel
                             HorizontalAlignment="Stretch"
-                            Background="White"
-                            Orientation="Horizontal">
+                            Background="Transparent"
+                            Orientation="Horizontal"
+                            ToolTip="{Binding FullPath}">
                             <StackPanel.InputBindings>
                                 <MouseBinding Command="{Binding SelectCommand}" Gesture="LeftDoubleClick" />
                             </StackPanel.InputBindings>
-                            <ui:SymbolIcon FontSize="{StaticResource SmallFontSize}" Symbol="{Binding Icon}" />
-                            <TextBlock
-                                Margin="10,0,0,0"
+                            <ui:SymbolIcon
+                                Margin="10,0"
                                 FontSize="{StaticResource SmallFontSize}"
-                                Text="{Binding Text}" />
+                                Symbol="{Binding Icon}" />
+                            <TextBlock FontSize="{StaticResource SmallFontSize}" Text="{Binding Text}" />
                         </StackPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
             <GridSplitter
                 HorizontalAlignment="Right"
-                BorderBrush="Gray"
-                BorderThickness="0.39" />
+                BorderBrush="{ui:ThemeResource}"
+                BorderThickness="1" />
         </Grid>
-        <Grid Grid.Row="2">
+        <Grid x:Name="StatusView" Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <ui:InfoBar
                 Height="39"
-                Padding="0"
+                Margin="10,0,0,0"
+                Padding="5"
                 d:IsOpen="True"
                 d:Message="正在加载：D:\RemeaMiku study\course in progress\.NET 架构程序设计\HomeworkProject04"
                 FontSize="12"
