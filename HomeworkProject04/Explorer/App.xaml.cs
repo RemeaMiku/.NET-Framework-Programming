@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Wpf.Ui.Mvvm.Contracts;
 using Wpf.Ui.Mvvm.Services;
 using Explorer.ViewModels;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace Explorer;
 
@@ -14,16 +15,12 @@ public partial class App : Application
 {
     #region Public Properties
 
-    /// <summary>
-    /// 获取当前 App 实例
-    /// </summary>
     public new static App Current => (App)Application.Current;
-    /// <summary>
-    /// 获取存放应用服务的容器
-    /// </summary>
+
     public IServiceProvider ServiceProvider { get; }
         = new ServiceCollection()
-        .AddSingleton<ISnackbarService, SnackbarService>()
+        .AddSingleton<IMessenger>(WeakReferenceMessenger.Default)
+        .AddSingleton<ISnackbarService>(new SnackbarService())
         .AddSingleton<MainWindowViewModel>()
         .AddSingleton<MainWindow>()
         .BuildServiceProvider();

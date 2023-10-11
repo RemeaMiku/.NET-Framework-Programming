@@ -15,21 +15,18 @@ namespace Explorer.ViewModels;
 
 public partial class MainWindowViewModel : ObservableObject
 {
+
     #region Public Constructors
 
-    public MainWindowViewModel(ISnackbarService snackbarService)
+    public MainWindowViewModel(IMessenger messenger, ISnackbarService snackbarService)
     {
+        _messenger = messenger;
         _snackbarService = snackbarService;
         var driveInfos = DriveInfo.GetDrives();
         foreach (var driveInfo in driveInfos)
             TreeViewItemViewModel.Root.Items.Add(new(driveInfo));
         Roots.Add(TreeViewItemViewModel.Root);
-        WeakReferenceMessenger.Default.Register(this, "Expanding", (MainWindowViewModel r, TreeViewItemViewModel m) => r.OnTreeViewItemExpanding(m));
-        WeakReferenceMessenger.Default.Register(this, "Expanded", (MainWindowViewModel r, TreeViewItemViewModel m) => r.OnTreeViewItemExpanded());
-        WeakReferenceMessenger.Default.Register(this, "Selected", async (MainWindowViewModel r, TreeViewItemViewModel m) =>
-        {
-            await r.OnItemSelectedAsync(m);
-        });
+        RegisterMessages();
         TreeViewItemViewModel.Root.IsSelected = true;
     }
 
@@ -49,6 +46,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     const string _ready = "准备就绪";
 
+    readonly IMessenger _messenger;
     readonly ISnackbarService _snackbarService;
     readonly Stack<TreeViewItemViewModel> _backStack = new();
 
@@ -134,6 +132,13 @@ public partial class MainWindowViewModel : ObservableObject
         }
     }
 
+    void RegisterMessages()
+    {
+        _messenger.Register(this, "Expanding", (MainWindowViewModel r, TreeViewItemViewModel m) => r.OnTreeViewItemExpanding(m));
+        _messenger.Register(this, "Expanded", (MainWindowViewModel r, TreeViewItemViewModel m) => r.OnTreeViewItemExpanded());
+        _messenger.Register(this, "Selected", async (MainWindowViewModel r, TreeViewItemViewModel m) => await r.OnItemSelectedAsync(m));
+    }
+
     void RunProcess(string path)
     {
         StatusInfo = $"正在打开：{path}";
@@ -201,4 +206,5 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     #endregion Private Methods
+
 }

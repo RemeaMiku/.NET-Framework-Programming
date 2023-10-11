@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Diagnostics;
 using System;
 using Wpf.Ui.Appearance;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Explorer;
 
@@ -16,12 +17,12 @@ public partial class MainWindow : Window
 {
     #region Public Constructors
 
-    public MainWindow(ISnackbarService snackbarService)
+    public MainWindow(MainWindowViewModel viewModel)
     {
         InitializeComponent();
         DataContext = this;
-        snackbarService.SetSnackbarControl(Snackbar);
-        ViewModel = new(snackbarService);
+        App.Current.ServiceProvider.GetRequiredService<ISnackbarService>().SetSnackbarControl(Snackbar);
+        ViewModel = viewModel;
         CloseAction = new(Close);
         RunNewInstanceAction = () => Process.Start(Environment.ProcessPath!);
         Theme.Apply(ThemeType.Light, BackgroundType.Auto, true, true);
