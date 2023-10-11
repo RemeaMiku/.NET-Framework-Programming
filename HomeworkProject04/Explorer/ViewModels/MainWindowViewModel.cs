@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Explorer.Extensions;
 using Wpf.Ui.Common;
@@ -24,14 +26,19 @@ public partial class MainWindowViewModel : ObservableObject
         Roots.Add(TreeViewItemViewModel.Root);
         WeakReferenceMessenger.Default.Register(this, "Expanding", (MainWindowViewModel r, TreeViewItemViewModel m) => r.OnTreeViewItemExpanding(m));
         WeakReferenceMessenger.Default.Register(this, "Expanded", (MainWindowViewModel r, TreeViewItemViewModel m) => r.OnTreeViewItemExpanded());
-        WeakReferenceMessenger.Default.Register(this, "Selected", async (MainWindowViewModel r, TreeViewItemViewModel m) => await r.OnSelectedItemChanged(m));
+        WeakReferenceMessenger.Default.Register(this, "Selected", async (MainWindowViewModel r, TreeViewItemViewModel m) =>
+        {
+            await r.OnItemSelectedAsync(m);
+        });
+        TreeViewItemViewModel.Root.IsSelected = true;
     }
-    [ObservableProperty]
-    string _currentPath = string.Empty;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsNotBusy))]
     bool _isBusy;
+
+    readonly Stack<TreeViewItemViewModel> _backStack = new();
+    readonly Stack<TreeViewItemViewModel> _forwardStack = new();
 
     const string _ready = "准备就绪";
 
@@ -39,6 +46,9 @@ public partial class MainWindowViewModel : ObservableObject
     string _statusInfo = _ready;
 
     public bool IsNotBusy => !IsBusy;
+
+    [ObservableProperty]
+    TreeViewItemViewModel _currentItemViewModel = TreeViewItemViewModel.Empty;
 
     public ObservableCollection<TreeViewItemViewModel> Items { get; } = new();
 
@@ -56,7 +66,23 @@ public partial class MainWindowViewModel : ObservableObject
         StatusInfo = _ready;
     }
 
-    async Task OnSelectedItemChanged(TreeViewItemViewModel itemViewModel)
+    void PushBackStack(TreeViewItemViewModel itemViewModel)
+    {
+        if (!IsBackButtonEnabled)
+            IsBackButtonEnabled = true;
+        if (itemViewModel != TreeViewItemViewModel.Empty)
+            _backStack.Push(itemViewModel);
+    }
+
+    TreeViewItemViewModel PopBackStack()
+    {
+        var res = _backStack.Pop();
+        if (_backStack.Count == 0)
+            IsBackButtonEnabled = false;
+        return res;
+    }
+
+    async Task OnItemSelectedAsync(TreeViewItemViewModel itemViewModel, bool calledFromMessage = true)
     {
         try
         {
@@ -65,13 +91,20 @@ public partial class MainWindowViewModel : ObservableObject
             var info = itemViewModel.GetDirectoryInfo();
             if (info is null)
             {
-                if (itemViewModel == TreeViewItemViewModel.Root)
-                    LoadItems(itemViewModel);
-                else
+                if (itemViewModel != TreeViewItemViewModel.Root)
+                {
                     RunProcess(itemViewModel.FullPath);
+                    return;
+                }
+                LoadDrives(itemViewModel);
             }
             else
-                await LoadDirectory(info);
+                await LoadDirectoryAsync(info);
+            if (calledFromMessage && CurrentItemViewModel != TreeViewItemViewModel.Empty)
+                PushBackStack(CurrentItemViewModel);
+            if (calledFromMessage && IsForwordButtonEnabled && itemViewModel.FullPath != PopForwordStack().FullPath)
+                ClearForwordStack();
+            CurrentItemViewModel = itemViewModel;
         }
         catch (Exception ex)
         {
@@ -94,18 +127,16 @@ public partial class MainWindowViewModel : ObservableObject
             _snackbarService.Show("提示", $"已打开文件：{path}。", SymbolRegular.Check24, ControlAppearance.Success);
     }
 
-    void LoadItems(TreeViewItemViewModel itemViewModel)
+    void LoadDrives(TreeViewItemViewModel itemViewModel)
     {
         Items.Clear();
-        CurrentPath = itemViewModel.FullPath;
         foreach (var item in itemViewModel.Items)
             Items.Add(item);
     }
 
-    async Task LoadDirectory(DirectoryInfo info)
+    async Task LoadDirectoryAsync(DirectoryInfo info)
     {
         Items.Clear();
-        CurrentPath = info.FullName;
         var viewModels = new List<TreeViewItemViewModel>();
         await Task.Run(() =>
         {
@@ -116,5 +147,44 @@ public partial class MainWindowViewModel : ObservableObject
         });
         foreach (var viewModel in viewModels)
             Items.Add(viewModel);
+    }
+
+    [ObservableProperty]
+    bool _isBackButtonEnabled;
+    [ObservableProperty]
+    bool _isForwordButtonEnabled;
+
+    void PushForwordStack(TreeViewItemViewModel viewItemViewModel)
+    {
+        if (!IsForwordButtonEnabled)
+            IsForwordButtonEnabled = true;
+        _forwardStack.Push(viewItemViewModel);
+    }
+
+    void ClearForwordStack()
+    {
+        _forwardStack.Clear();
+        IsForwordButtonEnabled = false;
+    }
+
+    TreeViewItemViewModel PopForwordStack()
+    {
+        var res = _forwardStack.Pop();
+        if (_forwardStack.Count == 0)
+            IsForwordButtonEnabled = false;
+        return res;
+    }
+
+    [RelayCommand]
+    async Task BackAsync()
+    {
+        PushForwordStack(CurrentItemViewModel);
+        await OnItemSelectedAsync(PopBackStack(), false);
+    }
+    [RelayCommand]
+    async Task ForwordAsync()
+    {
+        PushBackStack(CurrentItemViewModel);
+        await OnItemSelectedAsync(PopForwordStack(), false);
     }
 }

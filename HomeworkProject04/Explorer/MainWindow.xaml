@@ -45,16 +45,26 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal">
-                    <ui:Button BorderThickness="0" Icon="ChevronLeft24" />
-                    <ui:Button BorderThickness="0" Icon="ChevronRight24" />
+                    <ui:Button
+                        Command="{Binding ViewModel.BackCommand}"
+                        Icon="ChevronLeft24"
+                        IsEnabled="{Binding ViewModel.IsBackButtonEnabled}"
+                        IsEnabledChanged="OnButtonEnabledChanged" />
+                    <ui:Button
+                        Margin="10,0,0,0"
+                        Command="{Binding ViewModel.ForwordCommand}"
+                        Icon="ChevronRight24"
+                        IsEnabled="{Binding ViewModel.IsForwordButtonEnabled}"
+                        IsEnabledChanged="OnButtonEnabledChanged" />
                 </StackPanel>
                 <ui:TextBox
                     Grid.Column="1"
+                    Margin="10,0,0,0"
                     HorizontalAlignment="Stretch"
                     d:Text="D:\RemeaMiku study\course in progress\.NET 架构程序设计\HomeworkProject04"
                     Focusable="False"
                     IsReadOnly="True"
-                    Text="{Binding ViewModel.CurrentPath, Mode=OneWay}" />
+                    Text="{Binding ViewModel.CurrentItemViewModel.FullPath, Mode=OneWay}" />
             </Grid>
         </StackPanel>
         <Grid Grid.Row="1">
@@ -113,14 +123,15 @@
         </Grid>
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="300" />
             </Grid.ColumnDefinitions>
             <ui:InfoBar
                 Height="39"
                 Padding="0"
                 d:IsOpen="True"
                 d:Message="正在加载：D:\RemeaMiku study\course in progress\.NET 架构程序设计\HomeworkProject04"
+                FontSize="12"
                 IsClosable="False"
                 IsOpen="True"
                 Message="{Binding ViewModel.StatusInfo}" />

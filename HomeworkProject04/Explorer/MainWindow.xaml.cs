@@ -9,6 +9,7 @@ using Wpf.Ui.Mvvm.Contracts;
 using Explorer.ViewModels;
 using System.Windows.Controls;
 using TreeViewItem = System.Windows.Controls.TreeViewItem;
+using System.Windows.Input;
 
 namespace Explorer;
 
@@ -26,4 +27,23 @@ public partial class MainWindow : Window
     }
 
     public MainWindowViewModel ViewModel { get; }
+
+    private void OnButtonEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        var button = sender as System.Windows.Controls.Button;
+        if (button is not null)
+        {
+            if (button.IsEnabled)
+            {
+                button.Cursor = Cursors.Arrow;
+                button.Foreground = button.Tag as System.Windows.Media.Brush;
+            }
+            else
+            {
+                button.Tag = button.Foreground;
+                button.Cursor = Cursors.No;
+                button.Foreground = new SolidColorBrush(Colors.LightGray);
+            }
+        }
+    }
 }
