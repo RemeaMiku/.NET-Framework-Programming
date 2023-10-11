@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Wpf.Ui.Mvvm.Contracts;
 using Wpf.Ui.Mvvm.Services;
 using Explorer.ViewModels;
-using Wpf.Ui.Appearance;
 
 namespace Explorer;
 

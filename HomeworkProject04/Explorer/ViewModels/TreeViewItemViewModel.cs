@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Explorer.Extensions;
-using Microsoft.VisualBasic;
 using Wpf.Ui.Common;
 
 namespace Explorer.ViewModels;
@@ -132,15 +129,6 @@ public partial class TreeViewItemViewModel : ObservableObject
         foreach (var info in infos)
             Items.Add(new(info));
     }
-
-    //[RelayCommand]
-    //async Task ExpandAsync()
-    //{
-    //    WeakReferenceMessenger.Default.Send(this, "Expanding");
-    //    Items.Clear();
-    //    LoadItems(await Task.Run(() => GetDirectoryInfo()!.EnumerateAccessibleDirectories()));
-    //    WeakReferenceMessenger.Default.Send(this, "Expanded");
-    //}
 
     [RelayCommand]
     void Select() => WeakReferenceMessenger.Default.Send(this, "Selected");
