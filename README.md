@@ -1,5 +1,5 @@
 # .NET 架构程序设计
-2023-2024学年度第一学期计算机学院专业选课课程《.NET 架构程序设计》个人作业，指导老师：何政，采用的Nuget包有：
+2023-2024学年度第一学期计算机学院专业选修课程《.NET 架构程序设计》个人作业，采用的Nuget包有：
 - CommunityToolkit.Mvvm：MVVM模式必用工具库
 - Microsoft.Extensions.DependencyInjection：提供IoC依赖注入容器服务
 - Microsoft.Toolkit.Uwp.Notifications：提供Windows 10/11 Toast消息发送服务
