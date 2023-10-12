@@ -1,14 +1,14 @@
 ﻿<Window
     x:Class="Explorer.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:local="clr-namespace:Explorer"
     xmlns:cv="clr-namespace:Explorer.Converters"
-    xmlns:vw="clr-namespace:Explorer.ViewModels"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Explorer"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:vw="clr-namespace:Explorer.ViewModels"
     Title="{Binding ViewModel.CurrentItemViewModel.FullPath}"
     Width="800"
     Height="450"
@@ -18,11 +18,22 @@
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
     <Window.Resources>
-        <sys:Double x:Key="LargeFontSize">39</sys:Double>
-        <sys:Double x:Key="MediumFontSize">24</sys:Double>
-        <sys:Double x:Key="SmallFontSize">18</sys:Double>
+        <sys:Double x:Key="LargeFontSize">30</sys:Double>
+        <sys:Double x:Key="MediumFontSize">18</sys:Double>
+        <sys:Double x:Key="SmallFontSize">12</sys:Double>
         <cv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <SolidColorBrush x:Key="ForegroundBrush" Color="#00b7c3" />
+        <Style
+            x:Key="ToolBoxButtonStyle"
+            BasedOn="{StaticResource DefaultUiButtonStyle}"
+            TargetType="ui:Button">
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Foreground" Value="#AAAAAA" />
+                    <Setter Property="Cursor" Value="No" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
     <Grid Background="{ui:ThemeResource}" IsEnabled="{Binding ViewModel.IsNotBusy}">
         <Grid.RowDefinitions>
@@ -37,7 +48,7 @@
             d:Visibility="Collapsed"
             Timeout="4000" />
         <StackPanel Orientation="Vertical">
-            <Menu VerticalAlignment="Top">
+            <Menu VerticalAlignment="Top" FontSize="{StaticResource SmallFontSize}">
                 <ui:MenuItem Foreground="{StaticResource ForegroundBrush}" Header="文件(_F)">
                     <ui:MenuItem
                         Click="OnFileMenuItemClicked"
@@ -79,10 +90,9 @@
                 <ui:MenuItem Foreground="{StaticResource ForegroundBrush}" Header="选项(_O)">
                     <ui:MenuItem
                         Checked="OnOptionMenuItemChecked"
-                        Header="黑色主题"
+                        Header="暗黑模式"
                         IsCheckable="True"
-                        IsChecked="False"
-                        SymbolIcon="WeatherMoon24"
+                        SymbolIcon="DarkTheme24"
                         Unchecked="OnOptionMenuItemUnchecked" />
                 </ui:MenuItem>
             </Menu>
@@ -96,13 +106,13 @@
                         Command="{Binding ViewModel.BackCommand}"
                         Icon="ChevronLeft24"
                         IsEnabled="{Binding ViewModel.IsBackButtonEnabled}"
-                        IsEnabledChanged="OnButtonEnabledChanged" />
+                        Style="{StaticResource ToolBoxButtonStyle}" />
                     <ui:Button
                         Margin="10,0,0,0"
                         Command="{Binding ViewModel.ForwordCommand}"
                         Icon="ChevronRight24"
                         IsEnabled="{Binding ViewModel.IsForwordButtonEnabled}"
-                        IsEnabledChanged="OnButtonEnabledChanged" />
+                        Style="{StaticResource ToolBoxButtonStyle}" />
                 </StackPanel>
                 <ui:TextBox
                     Grid.Column="1"
@@ -113,7 +123,7 @@
                     Text="{Binding ViewModel.CurrentItemViewModel.FullPath, Mode=OneWay}" />
             </Grid>
         </StackPanel>
-        <Grid Grid.Row="1" Margin="10,0">
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition
                     x:Name="NavigationPanel"
@@ -124,12 +134,13 @@
             </Grid.ColumnDefinitions>
             <Image
                 Grid.ColumnSpan="2"
-                Opacity="0.39"
                 Source="Images/background.jpg"
                 Stretch="UniformToFill" />
             <TreeView
                 x:Name="NavigationView"
-                Padding="10"
+                Margin="10"
+                Padding="5"
+                Background="{DynamicResource ControlOnImageFillColorDefaultBrush}"
                 ItemsSource="{Binding ViewModel.Roots}"
                 VirtualizingPanel.IsVirtualizing="True"
                 VirtualizingPanel.VirtualizationMode="Recycling">
@@ -148,29 +159,36 @@
                     </HierarchicalDataTemplate>
                 </TreeView.ItemTemplate>
             </TreeView>
-            <ListView
+            <Border
                 Grid.Column="1"
                 Margin="10"
-                ItemsSource="{Binding ViewModel.Items}">
-                <ListView.ItemTemplate>
-                    <DataTemplate DataType="vw:TreeViewItemViewModel">
-                        <StackPanel
-                            HorizontalAlignment="Stretch"
-                            Background="Transparent"
-                            Orientation="Horizontal"
-                            ToolTip="{Binding FullPath}">
-                            <StackPanel.InputBindings>
-                                <MouseBinding Command="{Binding SelectCommand}" Gesture="LeftDoubleClick" />
-                            </StackPanel.InputBindings>
-                            <ui:SymbolIcon
-                                Margin="10,0"
-                                FontSize="{StaticResource SmallFontSize}"
-                                Symbol="{Binding Icon}" />
-                            <TextBlock FontSize="{StaticResource SmallFontSize}" Text="{Binding Text}" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                Padding="5"
+                Background="{DynamicResource ControlOnImageFillColorDefaultBrush}"
+                CornerRadius="3">
+                <ListView ItemsSource="{Binding ViewModel.Items}">
+                    <ListView.ItemContainerStyle>
+                        <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
+                            <Setter Property="FontSize" Value="{StaticResource MediumFontSize}" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate DataType="vw:TreeViewItemViewModel">
+                            <Border Padding="5" Background="Transparent">
+                                <Border.InputBindings>
+                                    <MouseBinding Command="{Binding SelectCommand}" Gesture="LeftDoubleClick" />
+                                </Border.InputBindings>
+                                <StackPanel
+                                    Margin="5,0,0,0"
+                                    Orientation="Horizontal"
+                                    ToolTip="{Binding FullPath}">
+                                    <ui:SymbolIcon Symbol="{Binding Icon}" />
+                                    <TextBlock Margin="10,0,0,0" Text="{Binding Text}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Border>
             <GridSplitter
                 HorizontalAlignment="Right"
                 BorderBrush="{ui:ThemeResource}"

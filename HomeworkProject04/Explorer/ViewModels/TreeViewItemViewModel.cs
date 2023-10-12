@@ -49,10 +49,15 @@ public partial class TreeViewItemViewModel : ObservableObject
     #region Public Properties
 
     public static TreeViewItemViewModel Empty { get; } = new();
+
     public static TreeViewItemViewModel Root { get; } = new(SymbolRegular.Desktop24, Environment.MachineName, Environment.MachineName);
+
     public SymbolRegular Icon { get; }
+
     public string Text { get; } = string.Empty;
+
     public string FullPath { get; } = string.Empty;
+
     public bool IsSelected
     {
         get => _isSelected;
@@ -113,6 +118,7 @@ public partial class TreeViewItemViewModel : ObservableObject
     private TreeViewItemViewModel()
     {
     }
+
     private TreeViewItemViewModel(SymbolRegular icon, string text, string path)
     {
         Icon = icon;

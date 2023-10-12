@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Explorer.Extensions;
+using Microsoft.Toolkit.Uwp.Notifications;
 using Wpf.Ui.Common;
 using Wpf.Ui.Mvvm.Contracts;
 
@@ -49,16 +50,18 @@ public partial class MainWindowViewModel : ObservableObject
     readonly IMessenger _messenger;
     readonly ISnackbarService _snackbarService;
     readonly Stack<TreeViewItemViewModel> _backStack = new();
-
     readonly Stack<TreeViewItemViewModel> _forwardStack = new();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsNotBusy))]
     bool _isBusy;
+
     [ObservableProperty]
     string _statusInfo = _ready;
+
     [ObservableProperty]
     TreeViewItemViewModel _currentItemViewModel = TreeViewItemViewModel.Empty;
+
     [ObservableProperty]
     bool _isBackButtonEnabled;
 
@@ -141,13 +144,22 @@ public partial class MainWindowViewModel : ObservableObject
 
     void RunProcess(string path)
     {
-        StatusInfo = $"正在打开：{path}";
+        var isExe = Path.GetExtension(path).ToLower() == ".exe";
+        StatusInfo = isExe ? $"正在启动：{path}" : $"正在打开：{path}";
         var process = new Process();
         process.StartInfo.FileName = path;
         process.StartInfo.UseShellExecute = true;
         process.StartInfo.ErrorDialog = true;
         if (process.Start())
-            _snackbarService.Show("提示", $"已打开文件：{path}。", SymbolRegular.Check24, ControlAppearance.Success);
+        {
+            _snackbarService.Show("提示", $"已成功打开或运行：{path}", SymbolRegular.Checkmark24, ControlAppearance.Success);
+            if (isExe)
+                new ToastContentBuilder()
+                .AddText("已成功启动")
+                .AddText(path)
+                .Show();
+        }
+
     }
 
     void LoadDrives(TreeViewItemViewModel itemViewModel)
@@ -171,6 +183,7 @@ public partial class MainWindowViewModel : ObservableObject
         foreach (var viewModel in viewModels)
             Items.Add(viewModel);
     }
+
     void PushForwordStack(TreeViewItemViewModel viewItemViewModel)
     {
         if (!IsForwordButtonEnabled)

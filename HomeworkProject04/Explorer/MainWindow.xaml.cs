@@ -40,27 +40,10 @@ public partial class MainWindow : Window
 
     #endregion Public Properties
 
-    #region Private Methods
+    #region Private Methods  
+    private void OnFileMenuItemClicked(object sender, RoutedEventArgs e)
+        => ((sender as System.Windows.Controls.MenuItem)!.Tag as Action)?.Invoke();
 
-    private void OnButtonEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
-    {
-        var button = sender as System.Windows.Controls.Button;
-        if (button is not null)
-        {
-            if (button.IsEnabled)
-            {
-                button.Cursor = Cursors.Arrow;
-                button.Foreground = button.Tag as Brush;
-            }
-            else
-            {
-                button.Tag = button.Foreground;
-                button.Cursor = Cursors.No;
-                button.Foreground = new SolidColorBrush(Colors.Gray);
-            }
-        }
-    }
-    private void OnFileMenuItemClicked(object sender, RoutedEventArgs e) => ((sender as System.Windows.Controls.MenuItem)!.Tag as Action)?.Invoke();
     private void OnViewMenuItemChecked(object sender, RoutedEventArgs e)
     {
         var ui = (sender as System.Windows.Controls.MenuItem)!.Tag as UIElement;
@@ -74,6 +57,7 @@ public partial class MainWindow : Window
             }
         }
     }
+
     private void OnViewMenuItemUnchecked(object sender, RoutedEventArgs e)
     {
         var ui = (sender as System.Windows.Controls.MenuItem)!.Tag as UIElement;
@@ -89,11 +73,10 @@ public partial class MainWindow : Window
         }
     }
     private void OnOptionMenuItemChecked(object sender, RoutedEventArgs e)
-        => Theme.Apply(ThemeType.Dark, BackgroundType.Auto, true, false);
-
+        => Theme.Apply(ThemeType.Dark, BackgroundType.Acrylic, true, false);
 
     private void OnOptionMenuItemUnchecked(object sender, RoutedEventArgs e)
-        => Theme.Apply(ThemeType.Light, BackgroundType.Auto, true, false);
+        => Theme.Apply(ThemeType.Light, BackgroundType.Acrylic, true, false);
 
     #endregion Private Methods
 }
