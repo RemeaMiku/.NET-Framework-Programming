@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
-    <ApplicationIcon>dotnet-explorer-icon.ico</ApplicationIcon>
+    <ApplicationIcon>lx-explorer-icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,10 +14,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="dotnet-explorer-icon.ico" />
     <Content Include="Images\background.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="lx-explorer-icon.ico" />
   </ItemGroup>
 
   <ItemGroup>
