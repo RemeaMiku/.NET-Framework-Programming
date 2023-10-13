@@ -25,7 +25,7 @@
         <SolidColorBrush x:Key="ForegroundBrush" Color="#00b7c3" />
         <Style
             x:Key="ToolBoxButtonStyle"
-            BasedOn="{StaticResource DefaultUiButtonStyle}"
+            BasedOn="{StaticResource {x:Type ui:Button}}"
             TargetType="ui:Button">
             <Style.Triggers>
                 <Trigger Property="IsEnabled" Value="False">
@@ -140,12 +140,12 @@
                 x:Name="NavigationView"
                 Margin="10"
                 Padding="5"
-                Background="{DynamicResource ControlOnImageFillColorDefaultBrush}"
+                Background="{ui:ThemeResource ControlOnImageFillColorDefaultBrush}"
                 ItemsSource="{Binding ViewModel.Roots}"
                 VirtualizingPanel.IsVirtualizing="True"
                 VirtualizingPanel.VirtualizationMode="Recycling">
                 <TreeView.ItemContainerStyle>
-                    <Style BasedOn="{StaticResource DefaultTreeViewItemStyle}" TargetType="TreeViewItem">
+                    <Style BasedOn="{StaticResource {x:Type TreeViewItem}}" TargetType="TreeViewItem">
                         <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay}" />
                         <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
                     </Style>
@@ -163,11 +163,11 @@
                 Grid.Column="1"
                 Margin="10"
                 Padding="5"
-                Background="{DynamicResource ControlOnImageFillColorDefaultBrush}"
+                Background="{ui:ThemeResource ControlOnImageFillColorDefaultBrush}"
                 CornerRadius="3">
                 <ListView ItemsSource="{Binding ViewModel.Items}">
                     <ListView.ItemContainerStyle>
-                        <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
+                        <Style BasedOn="{StaticResource {x:Type ListViewItem}}" TargetType="ListViewItem">
                             <Setter Property="FontSize" Value="{StaticResource MediumFontSize}" />
                         </Style>
                     </ListView.ItemContainerStyle>

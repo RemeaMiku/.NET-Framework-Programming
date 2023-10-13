@@ -73,10 +73,10 @@ public partial class MainWindow : Window
         }
     }
     private void OnOptionMenuItemChecked(object sender, RoutedEventArgs e)
-        => Theme.Apply(ThemeType.Dark, BackgroundType.Acrylic, true, false);
+        => Theme.Apply(ThemeType.Dark, BackgroundType.Auto, true, true);
 
     private void OnOptionMenuItemUnchecked(object sender, RoutedEventArgs e)
-        => Theme.Apply(ThemeType.Light, BackgroundType.Acrylic, true, false);
+        => Theme.Apply(ThemeType.Light, BackgroundType.Auto, true, true);
 
     #endregion Private Methods
 }
