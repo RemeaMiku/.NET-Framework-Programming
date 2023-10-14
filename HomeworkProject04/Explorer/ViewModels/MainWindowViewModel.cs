@@ -17,6 +17,8 @@ namespace Explorer.ViewModels;
 public partial class MainWindowViewModel : ObservableObject
 {
 
+    #region Public Constructors
+
     public MainWindowViewModel(IMessenger messenger, ISnackbarService snackbarService)
     {
         _messenger = messenger;
@@ -29,11 +31,19 @@ public partial class MainWindowViewModel : ObservableObject
         TreeViewItemViewModel.Root.IsSelected = true;
     }
 
+    #endregion Public Constructors
+
+    #region Public Properties
+
     public bool IsNotBusy => !IsBusy;
 
     public ObservableCollection<TreeViewItemViewModel> Items { get; } = new();
 
     public ObservableCollection<TreeViewItemViewModel> Roots { get; } = new();
+
+    #endregion Public Properties
+
+    #region Private Fields
 
     const string _ready = "准备就绪";
 
@@ -58,7 +68,9 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     bool _isForwordButtonEnabled;
 
+    #endregion Private Fields
 
+    #region Private Methods
 
     void OnTreeViewItemExpanding(TreeViewItemViewModel itemViewModel)
     {
@@ -210,5 +222,7 @@ public partial class MainWindowViewModel : ObservableObject
         PushBackStack(CurrentItemViewModel);
         await OnItemSelectedAsync(PopForwordStack(), false);
     }
+
+    #endregion Private Methods
 
 }
