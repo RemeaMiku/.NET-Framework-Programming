@@ -2,11 +2,14 @@
 using System.Windows.Media;
 using Wpf.Ui.Mvvm.Contracts;
 using Explorer.ViewModels;
-using System.Windows.Input;
 using System.Diagnostics;
 using System;
+using System.Windows.Shapes;
 using Wpf.Ui.Appearance;
 using Microsoft.Extensions.DependencyInjection;
+using System.Windows.Media.Animation;
+using System.Threading;
+using System.Windows.Controls;
 
 namespace Explorer;
 
@@ -42,14 +45,13 @@ public partial class MainWindow : Window
 
     #region Private Methods  
     private void OnFileMenuItemClicked(object sender, RoutedEventArgs e)
-        => ((sender as System.Windows.Controls.MenuItem)!.Tag as Action)?.Invoke();
+        => ((sender as MenuItem)!.Tag as Action)?.Invoke();
 
     private void OnViewMenuItemChecked(object sender, RoutedEventArgs e)
     {
-        var ui = (sender as System.Windows.Controls.MenuItem)!.Tag as UIElement;
+        var ui = (sender as MenuItem)!.Tag as UIElement;
         if (ui is not null)
         {
-            ui.Visibility = Visibility.Visible;
             if (ui == NavigationView)
             {
                 NavigationPanel.Width = (GridLength)NavigationPanel.Tag;
@@ -60,10 +62,9 @@ public partial class MainWindow : Window
 
     private void OnViewMenuItemUnchecked(object sender, RoutedEventArgs e)
     {
-        var ui = (sender as System.Windows.Controls.MenuItem)!.Tag as UIElement;
+        var ui = (sender as MenuItem)!.Tag as UIElement;
         if (ui is not null)
         {
-            ui.Visibility = Visibility.Collapsed;
             if (ui == NavigationView)
             {
                 NavigationPanel.MinWidth = 0;
@@ -72,11 +73,48 @@ public partial class MainWindow : Window
             }
         }
     }
+
     private void OnOptionMenuItemChecked(object sender, RoutedEventArgs e)
-        => Theme.Apply(ThemeType.Dark, BackgroundType.Auto, true, true);
+    {
+        Panel.SetZIndex(Mask, int.MaxValue);
+        var whiteToBlackAnimation = new ColorAnimation(Colors.White, Colors.Black, new(TimeSpan.FromSeconds(0.2)));
+        var fadeInOutAnimation = new DoubleAnimation(0, 100, new(TimeSpan.FromSeconds(0.1)))
+        {
+            AutoReverse = true
+        };
+        var storyboard = new Storyboard();
+        Storyboard.SetTargetName(whiteToBlackAnimation, nameof(Mask));
+        Storyboard.SetTargetProperty(whiteToBlackAnimation, new("Fill.Color"));
+        Storyboard.SetTargetName(fadeInOutAnimation, nameof(Mask));
+        Storyboard.SetTargetProperty(fadeInOutAnimation, new("Opacity"));
+        storyboard.Children.Add(fadeInOutAnimation);
+        storyboard.Children.Add(whiteToBlackAnimation);
+        storyboard.Begin(Mask);
+        Theme.Apply(ThemeType.Dark, BackgroundType.Auto, true, true);
+        Panel.SetZIndex(Mask, -1);
+    }
+
 
     private void OnOptionMenuItemUnchecked(object sender, RoutedEventArgs e)
-        => Theme.Apply(ThemeType.Light, BackgroundType.Auto, true, true);
+    {
+        Panel.SetZIndex(Mask, int.MaxValue);
+        var blackToWhiteAnimation = new ColorAnimation(Colors.Black, Colors.White, new(TimeSpan.FromSeconds(0.2)));
+        var fadeInOutAnimation = new DoubleAnimation(0, 100, new(TimeSpan.FromSeconds(0.1)))
+        {
+            AutoReverse = true
+        };
+        var storyboard = new Storyboard();
+        Storyboard.SetTargetName(blackToWhiteAnimation, nameof(Mask));
+        Storyboard.SetTargetProperty(blackToWhiteAnimation, new("Fill.Color"));
+        Storyboard.SetTargetName(fadeInOutAnimation, nameof(Mask));
+        Storyboard.SetTargetProperty(fadeInOutAnimation, new("Opacity"));
+        storyboard.Children.Add(blackToWhiteAnimation);
+        storyboard.Children.Add(fadeInOutAnimation);
+        storyboard.Begin(Mask);
+        Theme.Apply(ThemeType.Light, BackgroundType.Auto, true, true);
+        Panel.SetZIndex(Mask, -1);
+    }
+
 
     #endregion Private Methods
 }

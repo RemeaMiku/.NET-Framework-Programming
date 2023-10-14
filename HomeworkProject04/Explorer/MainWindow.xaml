@@ -41,6 +41,13 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
+        <Rectangle
+            x:Name="Mask"
+            Grid.RowSpan="3"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Fill="White"
+            Opacity="0.39" />
         <ui:Snackbar
             x:Name="Snackbar"
             Grid.RowSpan="3"
@@ -71,21 +78,84 @@
                         Tag="{Binding ElementName=NavigationView}"
                         Unchecked="OnViewMenuItemUnchecked" />
                     <ui:MenuItem
-                        Checked="OnViewMenuItemChecked"
                         Header="工具栏"
                         IsCheckable="True"
                         IsChecked="True"
-                        SymbolIcon="Toolbox24"
-                        Tag="{Binding ElementName=ToolBoxView}"
-                        Unchecked="OnViewMenuItemUnchecked" />
+                        SymbolIcon="Toolbox24">
+                        <ui:MenuItem.Triggers>
+                            <EventTrigger RoutedEvent="MenuItem.Unchecked">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Storyboard.Target="{Binding ElementName=ToolBoxView}"
+                                            Storyboard.TargetProperty="Height"
+                                            To="0"
+                                            Duration="0:0:0.3">
+                                            <DoubleAnimation.EasingFunction>
+                                                <BackEase Amplitude="0.1" EasingMode="EaseInOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                            <EventTrigger RoutedEvent="MenuItem.Checked">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            BeginTime="0:0:0"
+                                            Storyboard.Target="{Binding ElementName=ToolBoxView}"
+                                            Storyboard.TargetProperty="Height"
+                                            To="34"
+                                            Duration="0:0:0.3">
+                                            <DoubleAnimation.EasingFunction>
+                                                <BackEase Amplitude="0.1" EasingMode="EaseInOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </ui:MenuItem.Triggers>
+                    </ui:MenuItem>
                     <ui:MenuItem
-                        Checked="OnViewMenuItemChecked"
                         Header="状态栏"
                         IsCheckable="True"
                         IsChecked="True"
                         SymbolIcon="Info24"
-                        Tag="{Binding ElementName=StatusView}"
-                        Unchecked="OnViewMenuItemUnchecked" />
+                        Tag="{Binding ElementName=StatusView}">
+                        <ui:MenuItem.Triggers>
+                            <EventTrigger RoutedEvent="MenuItem.Unchecked">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Storyboard.Target="{Binding ElementName=StatusView}"
+                                            Storyboard.TargetProperty="Height"
+                                            To="0"
+                                            Duration="0:0:0.3">
+                                            <DoubleAnimation.EasingFunction>
+                                                <BackEase Amplitude="0.1" EasingMode="EaseInOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                            <EventTrigger RoutedEvent="MenuItem.Checked">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            BeginTime="0:0:0"
+                                            Storyboard.Target="{Binding ElementName=StatusView}"
+                                            Storyboard.TargetProperty="Height"
+                                            To="39"
+                                            Duration="0:0:0.3">
+                                            <DoubleAnimation.EasingFunction>
+                                                <BackEase Amplitude="0.1" EasingMode="EaseInOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </ui:MenuItem.Triggers>
+                    </ui:MenuItem>
                 </ui:MenuItem>
                 <ui:MenuItem Foreground="{StaticResource ForegroundBrush}" Header="选项(_O)">
                     <ui:MenuItem
@@ -96,7 +166,10 @@
                         Unchecked="OnOptionMenuItemUnchecked" />
                 </ui:MenuItem>
             </Menu>
-            <Grid x:Name="ToolBoxView" Margin="10">
+            <Grid
+                x:Name="ToolBoxView"
+                Height="34"
+                Margin="10,5,10,5">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -128,8 +201,8 @@
                 <ColumnDefinition
                     x:Name="NavigationPanel"
                     Width="200"
-                    MinWidth="100"
-                    MaxWidth="400" />
+                    MinWidth="150"
+                    MaxWidth="600" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Image
@@ -194,7 +267,10 @@
                 BorderBrush="{ui:ThemeResource}"
                 BorderThickness="1" />
         </Grid>
-        <Grid x:Name="StatusView" Grid.Row="2">
+        <Grid
+            x:Name="StatusView"
+            Grid.Row="2"
+            Height="39">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*" />
                 <ColumnDefinition Width="*" />
