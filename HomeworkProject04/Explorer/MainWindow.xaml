@@ -21,8 +21,9 @@
         <sys:Double x:Key="LargeFontSize">30</sys:Double>
         <sys:Double x:Key="MediumFontSize">18</sys:Double>
         <sys:Double x:Key="SmallFontSize">12</sys:Double>
-        <cv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <SolidColorBrush x:Key="ForegroundBrush" Color="#00b7c3" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <cv:BooleanToInfoBarServerityConverter x:Key="BooleanToInfoBarServerityConverter" />
         <Style
             x:Key="ToolBoxButtonStyle"
             BasedOn="{StaticResource {x:Type ui:Button}}"
@@ -159,6 +160,7 @@
                 </ui:MenuItem>
                 <ui:MenuItem Foreground="{StaticResource ForegroundBrush}" Header="选项(_O)">
                     <ui:MenuItem
+                        x:Name="ThemeMenuItem"
                         Checked="OnOptionMenuItemChecked"
                         Header="暗黑模式"
                         IsCheckable="True"
@@ -179,13 +181,21 @@
                         Command="{Binding ViewModel.BackCommand}"
                         Icon="ChevronLeft24"
                         IsEnabled="{Binding ViewModel.IsBackButtonEnabled}"
-                        Style="{StaticResource ToolBoxButtonStyle}" />
+                        Style="{StaticResource ToolBoxButtonStyle}"
+                        ToolTip="回退至上一目录" />
                     <ui:Button
                         Margin="10,0,0,0"
                         Command="{Binding ViewModel.ForwordCommand}"
                         Icon="ChevronRight24"
                         IsEnabled="{Binding ViewModel.IsForwordButtonEnabled}"
-                        Style="{StaticResource ToolBoxButtonStyle}" />
+                        Style="{StaticResource ToolBoxButtonStyle}"
+                        ToolTip="前进至下一目录" />
+                    <ui:Button
+                        x:Name="CopyButton"
+                        Margin="10,0,0,0"
+                        Click="OnCopyButtonClicked"
+                        Icon="Copy24"
+                        ToolTip="将路径复制到剪切板" />
                 </StackPanel>
                 <ui:TextBox
                     Grid.Column="1"
@@ -284,7 +294,8 @@
                 FontSize="12"
                 IsClosable="False"
                 IsOpen="True"
-                Message="{Binding ViewModel.StatusInfo}" />
+                Message="{Binding ViewModel.StatusInfo}"
+                Severity="{Binding ViewModel.IsNotBusy, Converter={StaticResource BooleanToInfoBarServerityConverter}}" />
             <ProgressBar
                 Grid.Column="1"
                 Margin="10,0,0,0"

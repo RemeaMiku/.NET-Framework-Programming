@@ -17,8 +17,6 @@ namespace Explorer.ViewModels;
 public partial class MainWindowViewModel : ObservableObject
 {
 
-    #region Public Constructors
-
     public MainWindowViewModel(IMessenger messenger, ISnackbarService snackbarService)
     {
         _messenger = messenger;
@@ -31,19 +29,11 @@ public partial class MainWindowViewModel : ObservableObject
         TreeViewItemViewModel.Root.IsSelected = true;
     }
 
-    #endregion Public Constructors
-
-    #region Public Properties
-
     public bool IsNotBusy => !IsBusy;
 
     public ObservableCollection<TreeViewItemViewModel> Items { get; } = new();
 
     public ObservableCollection<TreeViewItemViewModel> Roots { get; } = new();
-
-    #endregion Public Properties
-
-    #region Private Fields
 
     const string _ready = "准备就绪";
 
@@ -68,9 +58,7 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     bool _isForwordButtonEnabled;
 
-    #endregion Private Fields
 
-    #region Private Methods
 
     void OnTreeViewItemExpanding(TreeViewItemViewModel itemViewModel)
     {
@@ -109,15 +97,16 @@ public partial class MainWindowViewModel : ObservableObject
             var info = itemViewModel.GetDirectoryInfo();
             if (info is null)
             {
-                if (itemViewModel != TreeViewItemViewModel.Root)
+                if (itemViewModel == TreeViewItemViewModel.Root)
+                    ListDrives(itemViewModel);
+                else
                 {
-                    RunProcess(itemViewModel.FullPath);
+                    StartProcess(itemViewModel.FullPath);
                     return;
                 }
-                LoadDrives(itemViewModel);
             }
             else
-                await LoadDirectoryAsync(info);
+                await ListItemsInSelectedDirectoryAsync(info);
             if (calledFromMessage && CurrentItemViewModel != TreeViewItemViewModel.Empty)
                 PushBackStack(CurrentItemViewModel);
             if (calledFromMessage && IsForwordButtonEnabled && itemViewModel.FullPath != PopForwordStack().FullPath)
@@ -142,10 +131,15 @@ public partial class MainWindowViewModel : ObservableObject
         _messenger.Register(this, "Selected", async (MainWindowViewModel r, TreeViewItemViewModel m) => await r.OnItemSelectedAsync(m));
     }
 
-    void RunProcess(string path)
+    void StartProcess(string path)
     {
         var isExe = Path.GetExtension(path).ToLower() == ".exe";
         StatusInfo = isExe ? $"正在启动：{path}" : $"正在打开：{path}";
+        if (isExe)
+            new ToastContentBuilder()
+            .AddText("正在尝试启动")
+            .AddText(path)
+            .Show();
         var process = new Process();
         process.StartInfo.FileName = path;
         process.StartInfo.UseShellExecute = true;
@@ -155,21 +149,20 @@ public partial class MainWindowViewModel : ObservableObject
             _snackbarService.Show("提示", $"已成功打开或运行：{path}", SymbolRegular.Checkmark24, ControlAppearance.Success);
             if (isExe)
                 new ToastContentBuilder()
-                .AddText("已成功启动")
+                .AddText("已启动")
                 .AddText(path)
                 .Show();
         }
-
     }
 
-    void LoadDrives(TreeViewItemViewModel itemViewModel)
+    void ListDrives(TreeViewItemViewModel itemViewModel)
     {
         Items.Clear();
         foreach (var item in itemViewModel.Items)
             Items.Add(item);
     }
 
-    async Task LoadDirectoryAsync(DirectoryInfo info)
+    async Task ListItemsInSelectedDirectoryAsync(DirectoryInfo info)
     {
         Items.Clear();
         var viewModels = new List<TreeViewItemViewModel>();
@@ -217,7 +210,5 @@ public partial class MainWindowViewModel : ObservableObject
         PushBackStack(CurrentItemViewModel);
         await OnItemSelectedAsync(PopForwordStack(), false);
     }
-
-    #endregion Private Methods
 
 }

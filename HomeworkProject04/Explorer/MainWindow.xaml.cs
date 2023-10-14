@@ -8,6 +8,8 @@ using Wpf.Ui.Appearance;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows.Media.Animation;
 using System.Windows.Controls;
+using Wpf.Ui.Common;
+using System.Threading.Tasks;
 
 namespace Explorer;
 
@@ -26,12 +28,15 @@ public partial class MainWindow : Window
         ViewModel = viewModel;
         CloseAction = new(Close);
         RunNewInstanceAction = () => Process.Start(Environment.ProcessPath!);
-        Theme.Apply(ThemeType.Light, BackgroundType.Auto, true, true);
+        if (Theme.GetSystemTheme() == SystemThemeType.Dark)
+            ThemeMenuItem.IsChecked = true;
+        else
+            Theme.Apply(ThemeType.Light, BackgroundType.Auto, true, true);
     }
 
     #endregion Public Constructors
 
-    #region Public Properties
+    #region Public Properties    
 
     public MainWindowViewModel ViewModel { get; }
 
@@ -113,6 +118,15 @@ public partial class MainWindow : Window
         Panel.SetZIndex(Mask, -1);
     }
 
+    private async void OnCopyButtonClicked(object sender, RoutedEventArgs e)
+    {
+        System.Windows.Clipboard.SetDataObject(ViewModel.CurrentItemViewModel.FullPath);
+        CopyButton.Icon = SymbolRegular.Checkmark24;
+        CopyButton.Appearance = ControlAppearance.Success;
+        await Task.Delay(3900);
+        CopyButton.Icon = SymbolRegular.Copy24;
+        CopyButton.Appearance = ControlAppearance.Secondary;
+    }
 
     #endregion Private Methods
 }
