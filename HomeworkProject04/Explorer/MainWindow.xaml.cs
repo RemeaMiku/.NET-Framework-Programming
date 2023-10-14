@@ -4,11 +4,9 @@ using Wpf.Ui.Mvvm.Contracts;
 using Explorer.ViewModels;
 using System.Diagnostics;
 using System;
-using System.Windows.Shapes;
 using Wpf.Ui.Appearance;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows.Media.Animation;
-using System.Threading;
 using System.Windows.Controls;
 
 namespace Explorer;
