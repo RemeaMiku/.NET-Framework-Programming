@@ -13,22 +13,15 @@ public partial class BingPhoneNumberCrawlerService
 {
     public record class SearchResult(string PhoneNumber, HashSet<Uri> Sources);
 
-    public class SearchResultsChangedEventArgs(int progress, Uri currentUri, SearchResult result) : EventArgs
-    {
-        public int Progress { get; } = progress;
-        public SearchResult Result { get; } = result;
-        public Uri CurrentUri { get; } = currentUri;
-    }
-
-    public class UriChangedEventArgs(int progress, Uri currentUri) : EventArgs
-    {
-        public int Progress { get; } = progress;
-        public Uri CurrentUri { get; } = currentUri;
-    }
+    #region Public Fields
 
     public EventHandler<UriChangedEventArgs>? UriChanged;
 
     public EventHandler<SearchResultsChangedEventArgs>? SearchResultsChanged;
+
+    #endregion Public Fields
+
+    #region Public Constructors
 
     public BingPhoneNumberCrawlerService(int targetCount, int maxUriCount)
     {
@@ -37,9 +30,17 @@ public partial class BingPhoneNumberCrawlerService
         MaxUriCount = maxUriCount;
     }
 
+    #endregion Public Constructors
+
+    #region Public Properties
+
     public int TargetCount { get; }
 
     public int MaxUriCount { get; }
+
+    #endregion Public Properties
+
+    #region Public Methods
 
     public IEnumerable<SearchResult>? Search(string keyword)
     {
@@ -105,6 +106,35 @@ public partial class BingPhoneNumberCrawlerService
         }
     }
 
+    #endregion Public Methods
+
+    #region Public Classes
+
+    public class SearchResultsChangedEventArgs(int progress, Uri currentUri, SearchResult result) : EventArgs
+    {
+        #region Public Properties
+
+        public int Progress { get; } = progress;
+        public SearchResult Result { get; } = result;
+        public Uri CurrentUri { get; } = currentUri;
+
+        #endregion Public Properties
+    }
+
+    public class UriChangedEventArgs(int progress, Uri currentUri) : EventArgs
+    {
+        #region Public Properties
+
+        public int Progress { get; } = progress;
+        public Uri CurrentUri { get; } = currentUri;
+
+        #endregion Public Properties
+    }
+
+    #endregion Public Classes
+
+    #region Private Fields
+
     static readonly Regex _phoneRegex = PhoneNumberRegex();
 
     static readonly Regex _httpUrlRegex = HttpUrlRegex();
@@ -114,6 +144,10 @@ public partial class BingPhoneNumberCrawlerService
     readonly ConcurrentDictionary<string, HashSet<Uri>> _searchResults = new();
 
     readonly ConcurrentBag<Uri> _visitedUris = new();
+
+    #endregion Private Fields
+
+    #region Private Methods
 
     [GeneratedRegex("(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\\d{8}")]
     private static partial Regex PhoneNumberRegex();
@@ -201,5 +235,7 @@ public partial class BingPhoneNumberCrawlerService
                 yield return uri;
         }
     }
+
+    #endregion Private Methods
 
 }

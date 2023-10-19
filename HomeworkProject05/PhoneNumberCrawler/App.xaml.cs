@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,6 +9,8 @@ namespace PhoneNumberCrawler;
 /// </summary>
 public partial class App : Application
 {
+    #region Public Properties
+
     public new static App Current => (App)Application.Current;
 
     public IServiceProvider ServiceProvider { get; }
@@ -21,6 +18,12 @@ public partial class App : Application
         .AddSingleton<MainWindow>()
         .BuildServiceProvider();
 
+    #endregion Public Properties
+
+    #region Protected Methods
+
     protected override void OnStartup(StartupEventArgs e)
         => ServiceProvider.GetRequiredService<MainWindow>().Show();
+
+    #endregion Protected Methods
 }

@@ -1,18 +1,22 @@
-﻿<Window
+﻿<ui:UiWindow
     x:Class="PhoneNumberCrawler.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:PhoneNumberCrawler"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:PhoneNumberCrawler"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
     Title="BingSearchPhoneNumberCrawler"
     Width="800"
     Height="450"
     MinWidth="800"
     MinHeight="450"
     d:DataContext="{d:DesignInstance Type=local:MainWindow}"
+    ExtendsContentIntoTitleBar="True"
+    StateChanged="OnUiWindowStateChanged"
+    WindowBackdropType="Acrylic"
+    WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
     <Window.Resources>
         <sys:Double x:Key="LargeFontSize">24</sys:Double>
@@ -47,137 +51,207 @@
             <Setter Property="FontSize" Value="{StaticResource SmallFontSize}" />
             <Setter Property="IsOpen" Value="True" />
         </Style>
+        <Style
+            x:Key="TitleBarButtonStyle"
+            BasedOn="{StaticResource {x:Type ui:Button}}"
+            TargetType="ui:Button">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Height" Value="{Binding Width, RelativeSource={RelativeSource Mode=Self}}" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
     </Window.Resources>
-    <Grid Background="{ui:ThemeResource}">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
-        <Border
-            x:Name="OptionsPanel"
-            Width="0"
-            Padding="20"
-            d:Width="250"
-            Background="{ui:ThemeResource ControlSolidFillColorDefaultBrush}">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <StackPanel Orientation="Vertical">
-                    <TextBlock FontSize="{StaticResource LargeFontSize}" Text="选项" />
-                    <TextBlock Style="{StaticResource OptionText}" Text="目标电话号码数" />
-                    <ui:NumberBox
-                        Icon="Phone24"
-                        Style="{StaticResource CountNumberBoxStyle}"
-                        Text="100"
-                        ValidationMode="InvalidInputOverwritten" />
-                    <ui:InfoBar d:Message="应在[1,999]范围内" Style="{StaticResource OptionInfoBarStyle}" />
-                    <TextBlock Style="{StaticResource OptionText}" Text="最大URL数" />
-                    <ui:NumberBox
-                        Icon="CloudLink24"
-                        LargeChange="10000"
-                        SmallChange="1"
-                        Style="{StaticResource CountNumberBoxStyle}"
-                        Text="100000"
-                        ValidationMode="InvalidInputOverwritten" />
-                    <ui:InfoBar d:Message="应在[1,999,999]范围内" Style="{StaticResource OptionInfoBarStyle}" />
-                </StackPanel>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid
+            Background="Transparent"
+            MouseLeftButtonDown="OnTitleBarMouseLeftClicked"
+            MouseLeftButtonUp="OnTitleBarMouseUp"
+            MouseMove="OnTitleBarMouseMove"
+            MouseRightButtonDown="OnTitleBarMouseRightButtonDown">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel
+                Grid.Column="1"
+                HorizontalAlignment="Right"
+                Orientation="Horizontal">
                 <ui:Button
-                    x:Name="ThemeButton"
-                    Grid.Row="1"
-                    Click="OnThemeToggleButtonClick"
-                    FontSize="{StaticResource MediumFontSize}"
-                    Icon="WeatherMoon24" />
-            </Grid>
-        </Border>
-        <Grid Grid.Column="1" Margin="10">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="250" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <ui:Button
-                Width="39"
-                Height="{Binding Width, RelativeSource={RelativeSource Mode=Self}}"
-                BorderThickness="0"
-                Click="OnExpandButtonClicked"
-                FontSize="{StaticResource MediumFontSize}"
-                Icon="LineHorizontal320" />
-            <Border Grid.Row="1" Padding="78,0">
-                <StackPanel VerticalAlignment="Center" Orientation="Vertical">
-                    <Image Height="39" Source="{StaticResource MicrosoftBingLogoDrawingImage}" />
-                    <Grid Margin="0,39,0,0">
-                        <ui:TextBox
-                            ClearButtonEnabled="False"
-                            Icon="Search24"
-                            PlaceholderText="搜索可能的电话号码..." />
-                        <Button
-                            Margin="0,0,10,0"
-                            Padding="0"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center"
-                            Background="Transparent"
-                            BorderThickness="0">
-                            <Image
-                                Width="20"
-                                Height="{Binding Width, RelativeSource={RelativeSource Mode=Self}}"
-                                Source="{StaticResource BingFluentLogoDrawingImage}" />
-                        </Button>
-                    </Grid>
-                </StackPanel>
+                    x:Name="MinimizeButton"
+                    Click="OnMinimizeButtonClick"
+                    Icon="LineHorizontal120"
+                    MouseOverBackground="#55FFFFFF"
+                    Style="{StaticResource TitleBarButtonStyle}" />
+                <ui:Button
+                    x:Name="MaximizeButton"
+                    Click="OnMaximizeButtonClick"
+                    Icon="Maximize24"
+                    MouseOverBackground="#55FFFFFF"
+                    Style="{StaticResource TitleBarButtonStyle}" />
+                <ui:Button
+                    x:Name="CloseButton"
+                    Click="OnCloseButtonClick"
+                    Icon="Dismiss24"
+                    MouseOverBackground="#F25022"
+                    Style="{StaticResource TitleBarButtonStyle}" />
+            </StackPanel>
+        </Grid>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Border
+                x:Name="OptionsPanel"
+                Width="0"
+                Padding="20"
+                d:Width="300">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock
+                            d:Foreground="Black"
+                            FontSize="{StaticResource LargeFontSize}"
+                            Text="选项" />
+                        <TextBlock
+                            d:Foreground="Black"
+                            Style="{StaticResource OptionText}"
+                            Text="目标电话号码数" />
+                        <ui:NumberBox
+                            Icon="Phone24"
+                            Style="{StaticResource CountNumberBoxStyle}"
+                            Text="100"
+                            ValidationMode="InvalidInputOverwritten" />
+                        <ui:InfoBar Message="应在[1,999]范围内" Style="{StaticResource OptionInfoBarStyle}" />
+                        <TextBlock
+                            d:Foreground="Black"
+                            Style="{StaticResource OptionText}"
+                            Text="最大URL数" />
+                        <ui:NumberBox
+                            Icon="CloudLink24"
+                            LargeChange="10000"
+                            SmallChange="1"
+                            Style="{StaticResource CountNumberBoxStyle}"
+                            Text="100000"
+                            ValidationMode="InvalidInputOverwritten" />
+                        <ui:InfoBar Message="应在[1,999,999]范围内" Style="{StaticResource OptionInfoBarStyle}" />
+                    </StackPanel>
+                    <ui:Button
+                        x:Name="ThemeButton"
+                        Grid.Row="1"
+                        Click="OnThemeToggleButtonClick"
+                        FontSize="{StaticResource MediumFontSize}"
+                        Icon="WeatherMoon24" />
+                </Grid>
             </Border>
-            <Grid Grid.Row="2" Margin="39,10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+            <Border
+                Grid.Column="1"
+                Padding="10"
+                Background="{ui:ThemeResource ControlOnImageFillColorDefaultBrush}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" MinHeight="200" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <TextBlock FontSize="{StaticResource LargeFontSize}" Text="可能的电话号码" />
-                    <ListView Grid.Row="1" Margin="0,10,0,0">
-                        <ListViewItem Content="15926506853" />
-                        <ListViewItem Content="15926506853" />
-                        <ListViewItem Content="15926506853" />
-                        <ListViewItem Content="15926506853" />
-                        <ListViewItem Content="15926506853" />
-                        <ListViewItem Content="15926506853" />
-                        <ListViewItem Content="15926506853" />
-                        <ListViewItem Content="15926506853" />
-                        <ListViewItem Content="15926506853" />
-                        <ListViewItem Content="15926506853" />
-                        <ListViewItem Content="15926506853" />
-                        <ListViewItem Content="15926506853" />
-                        <ListViewItem Content="15926506853" />
-                    </ListView>
+                    <ui:Button
+                        Width="39"
+                        Height="{Binding Width, RelativeSource={RelativeSource Mode=Self}}"
+                        BorderThickness="0"
+                        Click="OnExpandButtonClicked"
+                        FontSize="{StaticResource MediumFontSize}"
+                        Icon="LineHorizontal320" />
+                    <StackPanel
+                        Grid.Row="1"
+                        Margin="0,78,0,0"
+                        VerticalAlignment="Center"
+                        Orientation="Vertical">
+                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                            <Image
+                                Width="39"
+                                Height="{Binding Width, RelativeSource={RelativeSource Mode=Self}}"
+                                Source="{StaticResource MicrosoftDrawingImage}" />
+                            <TextBlock
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                d:Foreground="Black"
+                                FontSize="{StaticResource LargeFontSize}"
+                                FontWeight="Normal"
+                                Text="Microsoft Bing" />
+                        </StackPanel>
+                        <Grid Margin="100,20">
+                            <ui:TextBox
+                                ClearButtonEnabled="False"
+                                Icon="Search24"
+                                PlaceholderText="搜索网页" />
+                            <Button
+                                Margin="0,0,10,0"
+                                Padding="0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Background="Transparent"
+                                BorderThickness="0">
+                                <Image
+                                    Width="20"
+                                    Height="{Binding Width, RelativeSource={RelativeSource Mode=Self}}"
+                                    Source="{StaticResource BingFluentLogoDrawingImage}" />
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                    <Border
+                        Grid.Row="2"
+                        Padding="20"
+                        d:Visibility="Visible"
+                        Visibility="Collapsed">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock
+                                    d:Foreground="Black"
+                                    FontSize="{StaticResource LargeFontSize}"
+                                    Text="可能的电话号码" />
+                                <ListView Grid.Row="1" Margin="0,10,0,0">
+                                    <ListViewItem Content="12345678900" />
+                                    <ListViewItem Content="12345678900" />
+                                    <ListViewItem Content="12345678900" />
+                                    <ListViewItem Content="12345678900" />
+                                    <ListViewItem Content="12345678900" />
+                                </ListView>
+                            </Grid>
+                            <Grid Grid.Column="1" Margin="39,0,0,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock
+                                    d:Foreground="Black"
+                                    FontSize="{StaticResource LargeFontSize}"
+                                    Text="此号码可能的来源" />
+                                <ListView Grid.Row="1" Margin="0,10,0,0">
+                                    <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
+                                    <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
+                                    <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
+                                    <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
+                                    <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
+                                </ListView>
+                            </Grid>
+                        </Grid>
+                    </Border>
                 </Grid>
-                <Grid Grid.Column="1" Margin="39,0,0,0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <TextBlock FontSize="{StaticResource LargeFontSize}" Text="此号码可能的来源" />
-                    <ListView Grid.Row="1" Margin="0,10,0,0">
-                        <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                        <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                        <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                        <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                        <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                        <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                        <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                        <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                        <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                        <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                        <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                        <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                        <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                        <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                    </ListView>
-                </Grid>
-            </Grid>
+            </Border>
         </Grid>
     </Grid>
-</Window>
+</ui:UiWindow>
