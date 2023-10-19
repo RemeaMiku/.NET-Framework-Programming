@@ -37,8 +37,8 @@
             x:Key="BorderLessSquareUiButtonStyle"
             BasedOn="{StaticResource BorderLessTransparentUiButtonStyle}"
             TargetType="ui:Button">
-            <Setter Property="MinHeight" Value="{Binding RelativeSource={RelativeSource Self}, Path=ActualWidth}" />
-            <Setter Property="MinWidth" Value="{Binding RelativeSource={RelativeSource Self}, Path=ActualHeight}" />
+            <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Self}, Path=ActualWidth}" />
+            <Setter Property="Width" Value="Auto" />
         </Style>
         <Style
             x:Key="OptionTextStyle"
@@ -151,7 +151,6 @@
                             <ui:InfoBar Message="应在[1,999,999]范围内" Style="{StaticResource OptionInfoBarStyle}" />
                         </StackPanel>
                     </Border>
-
                     <ui:Button
                         x:Name="ThemeButton"
                         Grid.Row="1"
