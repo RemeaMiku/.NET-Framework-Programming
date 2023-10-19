@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using PhoneNumberCrawler.Shared;
 
-namespace PhoneNumberCrawler.Wpf.Services;
+namespace PhoneNumberCrawler.ViewModels;
 
-public class PhoneNumberCrawlerService
+public class SeachResultViewModel
 {
 
 }

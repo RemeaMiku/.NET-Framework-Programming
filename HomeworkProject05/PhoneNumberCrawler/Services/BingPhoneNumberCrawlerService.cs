@@ -1,45 +1,52 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace PhoneNumberCrawler.Shared;
+namespace PhoneNumberCrawler.Services;
 
-public partial class BingPhoneNumberCrawler
+public partial class BingPhoneNumberCrawlerService
 {
-    #region Public Fields
+    public record class SearchResult(string PhoneNumber, HashSet<Uri> Sources);
+
+    public class SearchResultsChangedEventArgs(int progress, Uri currentUri, SearchResult result) : EventArgs
+    {
+        public int Progress { get; } = progress;
+        public SearchResult Result { get; } = result;
+        public Uri CurrentUri { get; } = currentUri;
+    }
+
+    public class UriChangedEventArgs(int progress, Uri currentUri) : EventArgs
+    {
+        public int Progress { get; } = progress;
+        public Uri CurrentUri { get; } = currentUri;
+    }
+
+    public EventHandler<UriChangedEventArgs>? UriChanged;
 
     public EventHandler<SearchResultsChangedEventArgs>? SearchResultsChanged;
 
-    #endregion Public Fields
-
-    #region Public Constructors
-
-    public BingPhoneNumberCrawler(int targetPhoneNumberCount, int maxUriCount)
+    public BingPhoneNumberCrawlerService(int targetCount, int maxUriCount)
     {
-        ThrowArgumentOutOfRangeExceptionIfIsInvalid(targetPhoneNumberCount, maxUriCount);
-        TargetPhoneNumberCount = targetPhoneNumberCount;
+        ValidateArguments(targetCount, maxUriCount);
+        TargetCount = targetCount;
         MaxUriCount = maxUriCount;
     }
 
-    #endregion Public Constructors
-
-    #region Public Properties
-
-    public int TargetPhoneNumberCount { get; }
+    public int TargetCount { get; }
 
     public int MaxUriCount { get; }
 
-    #endregion Public Properties
-
-    #region Public Methods
-
-    public List<PhoneNumberSearchResult>? Search(string keyword)
+    public IEnumerable<SearchResult>? Search(string keyword)
     {
-        var result = default(List<PhoneNumberSearchResult>);
         var initSearchLink = _initBingSearchLink + keyword;
         using var client = new HttpClient() { Timeout = TimeSpan.FromSeconds(10) };
         using var tokenSource = new CancellationTokenSource();
         var exceptions = new ConcurrentQueue<Exception>();
-        result = new();
         try
         {
             var r = Parallel.For(0, MaxUriCount, new ParallelOptions
@@ -80,11 +87,11 @@ public partial class BingPhoneNumberCrawler
                         tokenSource.Cancel();
                 }
             });
-            return GetSearchResultsOrThrowAggregateExceptionIfHasException(exceptions);
+            return EnumerateSearchResultsIfHasNoException(exceptions);
         }
         catch (OperationCanceledException)
         {
-            return GetSearchResultsOrThrowAggregateExceptionIfHasException(exceptions);
+            return EnumerateSearchResultsIfHasNoException(exceptions);
         }
         catch (Exception ex)
         {
@@ -98,24 +105,6 @@ public partial class BingPhoneNumberCrawler
         }
     }
 
-    #endregion Public Methods
-
-    #region Public Classes
-
-    public class SearchResultsChangedEventArgs(int progress, PhoneNumberSearchResult result) : EventArgs
-    {
-        #region Public Properties
-
-        public int Progress { get; } = progress;
-        public PhoneNumberSearchResult Result { get; } = result;
-
-        #endregion Public Properties
-    }
-
-    #endregion Public Classes
-
-    #region Private Fields
-
     static readonly Regex _phoneRegex = PhoneNumberRegex();
 
     static readonly Regex _httpUrlRegex = HttpUrlRegex();
@@ -126,48 +115,40 @@ public partial class BingPhoneNumberCrawler
 
     readonly ConcurrentBag<Uri> _visitedUris = new();
 
-    #endregion Private Fields
-
-    #region Private Methods
-
     [GeneratedRegex("(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\\d{8}")]
     private static partial Regex PhoneNumberRegex();
 
     [GeneratedRegex("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)")]
     private static partial Regex HttpUrlRegex();
 
-    void ThrowArgumentOutOfRangeExceptionIfIsInvalid(int targetPhoneNumberCount, int maxUriCount)
+    void ValidateArguments(int targetCount, int maxUriCount)
     {
-        if (targetPhoneNumberCount <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(targetPhoneNumberCount), "The target count of phone numbrs should be greater than 1.");
-        }
-        if (maxUriCount <= 0)
-        {
+        if (targetCount <= 0 || targetCount > 999)
+            throw new ArgumentOutOfRangeException(nameof(targetCount), "The target count of phone numbrs should be greater than 1.");
+        if (maxUriCount <= 0 || maxUriCount > 99_9999)
             throw new ArgumentOutOfRangeException(nameof(maxUriCount), "The maximize count of uri should be greater than 1.");
-        }
     }
-    List<PhoneNumberSearchResult> GetSearchResultsOrThrowAggregateExceptionIfHasException(ConcurrentQueue<Exception> exceptions)
+
+    IEnumerable<SearchResult> EnumerateSearchResultsIfHasNoException(ConcurrentQueue<Exception> exceptions)
     {
         if (!exceptions.IsEmpty)
             throw new AggregateException(exceptions);
-        var result = new List<PhoneNumberSearchResult>();
+        var count = 1;
         foreach ((var phoneNumber, var source) in _searchResults)
         {
-            result.Add(new(phoneNumber, source));
-            if (result.Count == TargetPhoneNumberCount)
-                break;
+            yield return new(phoneNumber, source);
+            if (count == TargetCount)
+                yield break;
         }
-        return result;
     }
 
-    void ThrowArgumentExceptionIfHtmlIsNullOrWhiteSpace(string html)
+    void ValidateHtml(string html)
     {
         if (html is null || string.IsNullOrWhiteSpace(html))
             throw new ArgumentException("The html is null or empty.", nameof(html));
     }
 
-    bool ValadateVisitedUris(Uri uri, CancellationTokenSource tokenSource)
+    bool CheckVisitedUris(Uri uri, CancellationTokenSource tokenSource)
     {
         if (_visitedUris.Count >= MaxUriCount && !tokenSource.IsCancellationRequested)
         {
@@ -185,21 +166,26 @@ public partial class BingPhoneNumberCrawler
     {
         if (tokenSource.IsCancellationRequested)
             return;
-        ThrowArgumentExceptionIfHtmlIsNullOrWhiteSpace(html);
-        if (!ValadateVisitedUris(currentUri, tokenSource))
+        ValidateHtml(html);
+        if (!CheckVisitedUris(currentUri, tokenSource))
             return;
+        UriChanged?.Invoke(this, new(_visitedUris.Count, currentUri));
         var matches = _phoneRegex.Matches(html);
         foreach (var match in matches.Cast<Match>())
         {
-            if (_searchResults.Count >= TargetPhoneNumberCount && !tokenSource.IsCancellationRequested)
+            if (_searchResults.Count >= TargetCount && !tokenSource.IsCancellationRequested)
                 tokenSource.Cancel();
             var phoneNumber = match.Value;
-            _searchResults.AddOrUpdate(phoneNumber, new HashSet<Uri>() { currentUri }, (p, l) =>
+            var sourcesChanged = false;
+            var sources = _searchResults.AddOrUpdate(phoneNumber, new HashSet<Uri>() { currentUri }, (p, l) =>
             {
-                l.Add(currentUri);
+                sourcesChanged = l.Add(currentUri);
                 return l;
             });
-            SearchResultsChanged?.Invoke(this, new(_searchResults.Count, new(phoneNumber, _searchResults[phoneNumber])));
+            if (sourcesChanged || sources.Count == 1)
+            {
+                SearchResultsChanged?.Invoke(this, new(_searchResults.Count, currentUri, new(phoneNumber, _searchResults[phoneNumber])));
+            }
         }
     }
 
@@ -216,5 +202,4 @@ public partial class BingPhoneNumberCrawler
         }
     }
 
-    #endregion Private Methods
 }
