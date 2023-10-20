@@ -7,13 +7,15 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    Title="BingSearchPhoneNumberCrawler"
-    Width="800"
-    Height="450"
-    MinWidth="800"
-    MinHeight="450"
+    x:Name="Window"
+    Title="必应电话号码爬虫"
+    Width="1000"
+    Height="600"
+    MinWidth="1000"
+    MinHeight="600"
     d:DataContext="{d:DesignInstance Type=local:MainWindow}"
     ExtendsContentIntoTitleBar="True"
+    SizeChanged="OnWindowSizeChanged"
     StateChanged="OnUiWindowStateChanged"
     WindowBackdropType="Acrylic"
     WindowStartupLocation="CenterScreen"
@@ -22,7 +24,9 @@
         <sys:Double x:Key="LargeFontSize">24</sys:Double>
         <sys:Double x:Key="MediumFontSize">16</sys:Double>
         <sys:Double x:Key="SmallFontSize">12</sys:Double>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <Style TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="FontWeight" Value="Light" />
             <Setter Property="Foreground" Value="{ui:ThemeResource TextFillColorPrimaryBrush}" />
         </Style>
@@ -44,7 +48,6 @@
             x:Key="OptionTextStyle"
             BasedOn="{StaticResource {x:Type TextBlock}}"
             TargetType="TextBlock">
-            <Setter Property="Margin" Value="0,10,0,0" />
             <Setter Property="FontSize" Value="{StaticResource MediumFontSize}" />
         </Style>
         <Style
@@ -70,6 +73,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="30" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid
             Background="Transparent"
@@ -81,6 +85,19 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
+            <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                <Image
+                    Width="20"
+                    Height="20"
+                    Source="{StaticResource BingFluentLogoDrawingImage}"
+                    Stretch="Uniform" />
+                <TextBlock
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    d:Foreground="Black"
+                    d:Text="必应电话号码爬虫"
+                    Text="{Binding ElementName=Window, Path=Title}" />
+            </StackPanel>
             <StackPanel
                 Grid.Column="1"
                 HorizontalAlignment="Right"
@@ -111,45 +128,66 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Border
-                x:Name="OptionsPanel"
+                x:Name="ExpandPanel"
                 Width="0"
                 Padding="5"
-                d:Width="300"
+                d:Width="400"
                 Background="{ui:ThemeResource ControlOnImageFillColorDefaultBrush}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <Border Padding="20">
-                        <StackPanel Orientation="Vertical">
-                            <TextBlock
-                                d:Foreground="Black"
-                                FontSize="{StaticResource LargeFontSize}"
-                                Text="选项" />
-                            <TextBlock
-                                d:Foreground="Black"
-                                Style="{StaticResource OptionTextStyle}"
-                                Text="目标电话号码数" />
-                            <ui:NumberBox
-                                Icon="Phone24"
-                                Style="{StaticResource CountNumberBoxStyle}"
-                                Text="100"
-                                ValidationMode="InvalidInputOverwritten" />
-                            <ui:InfoBar Message="应在[1,999]范围内" Style="{StaticResource OptionInfoBarStyle}" />
-                            <TextBlock
-                                d:Foreground="Black"
-                                Style="{StaticResource OptionTextStyle}"
-                                Text="最大URL数" />
-                            <ui:NumberBox
-                                Icon="CloudLink24"
-                                LargeChange="10000"
-                                SmallChange="1"
-                                Style="{StaticResource CountNumberBoxStyle}"
-                                Text="100000"
-                                ValidationMode="InvalidInputOverwritten" />
-                            <ui:InfoBar Message="应在[1,999,999]范围内" Style="{StaticResource OptionInfoBarStyle}" />
-                        </StackPanel>
+                    <Border Padding="5">
+                        <ScrollViewer>
+                            <StackPanel Orientation="Vertical">
+                                <ui:CardExpander
+                                    VerticalAlignment="Center"
+                                    FontSize="{StaticResource MediumFontSize}"
+                                    Header="选项"
+                                    Icon="Options24">
+                                    <StackPanel Orientation="Vertical">
+                                        <TextBlock
+                                            d:Foreground="Black"
+                                            Style="{StaticResource OptionTextStyle}"
+                                            Text="目标电话号码数" />
+                                        <ui:NumberBox
+                                            d:Text="100"
+                                            Icon="Phone24"
+                                            Maximum="999"
+                                            Minimum="1"
+                                            Style="{StaticResource CountNumberBoxStyle}"
+                                            Text="{Binding ViewModel.TargetCount, UpdateSourceTrigger=PropertyChanged}"
+                                            TextChanged="OnNumberBoxTextChanged"
+                                            ValidationMode="InvalidInputOverwritten" />
+                                        <ui:InfoBar Message="应为[1,999]范围内整数" Style="{StaticResource OptionInfoBarStyle}" />
+                                        <TextBlock
+                                            Margin="0,10,0,0"
+                                            d:Foreground="Black"
+                                            Style="{StaticResource OptionTextStyle}"
+                                            Text="最大URL数" />
+                                        <ui:NumberBox
+                                            d:Text="100000"
+                                            Icon="CloudLink24"
+                                            LargeChange="10000"
+                                            Maximum="999999"
+                                            Minimum="1"
+                                            SmallChange="1"
+                                            Style="{StaticResource CountNumberBoxStyle}"
+                                            Text="{Binding ViewModel.MaxUrlCount, UpdateSourceTrigger=PropertyChanged}"
+                                            TextChanged="OnNumberBoxTextChanged"
+                                            ValidationMode="InvalidInputOverwritten" />
+                                        <ui:InfoBar Message="应为[1,999,999]范围内整数" Style="{StaticResource OptionInfoBarStyle}" />
+                                    </StackPanel>
+                                </ui:CardExpander>
+                                <ui:CardExpander
+                                    FontSize="{StaticResource MediumFontSize}"
+                                    Header="历史记录"
+                                    Icon="History24">
+                                    <ListView ItemsSource="{Binding ViewModel.UrlHistory}" ScrollViewer.HorizontalScrollBarVisibility="Visible" />
+                                </ui:CardExpander>
+                            </StackPanel>
+                        </ScrollViewer>
                     </Border>
                     <ui:Button
                         x:Name="ThemeButton"
@@ -165,14 +203,24 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" MinHeight="200" />
+                        <RowDefinition Height="200" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <ui:Button
-                        Click="OnExpandButtonClicked"
-                        FontSize="{StaticResource LargeFontSize}"
-                        Icon="LineHorizontal320"
-                        Style="{StaticResource BorderLessSquareUiButtonStyle}" />
+                    <Grid>
+                        <ui:Button
+                            Click="OnExpandButtonClicked"
+                            FontSize="{StaticResource LargeFontSize}"
+                            Icon="LineHorizontal320"
+                            Style="{StaticResource BorderLessSquareUiButtonStyle}" />
+                        <ui:Button
+                            HorizontalAlignment="Right"
+                            d:Visibility="Visible"
+                            Command="{Binding ViewModel.CancelCommand}"
+                            FontSize="{StaticResource LargeFontSize}"
+                            Icon="Stop24"
+                            Style="{StaticResource BorderLessSquareUiButtonStyle}"
+                            Visibility="{Binding ViewModel.IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    </Grid>
                     <StackPanel
                         Grid.Row="1"
                         Margin="0,78,0,0"
@@ -196,26 +244,29 @@
                                 Padding="10,10,40,10"
                                 ClearButtonEnabled="False"
                                 Icon="Search24"
-                                PlaceholderText="搜索网页" />
-                            <Button
+                                PlaceholderText="搜索网页"
+                                Text="{Binding ViewModel.Keyword}" />
+                            <ui:Button
                                 Margin="0,0,10,0"
-                                Padding="0"
+                                Padding="5"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
                                 Background="Transparent"
-                                BorderThickness="0">
+                                BorderThickness="0"
+                                Command="{Binding ViewModel.SearchCommand}"
+                                MouseOverBackground="{ui:ThemeResource}">
                                 <Image
                                     Width="20"
                                     Height="{Binding Width, RelativeSource={RelativeSource Mode=Self}}"
                                     Source="{StaticResource BingFluentLogoDrawingImage}" />
-                            </Button>
+                            </ui:Button>
                         </Grid>
                     </StackPanel>
                     <Border
                         Grid.Row="2"
                         Padding="20"
                         d:Visibility="Visible"
-                        Visibility="Collapsed">
+                        Visibility="{Binding ViewModel.HasSearched, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -230,13 +281,11 @@
                                     d:Foreground="Black"
                                     FontSize="{StaticResource LargeFontSize}"
                                     Text="可能的电话号码" />
-                                <ListView Grid.Row="1" Margin="0,10,0,0">
-                                    <ListViewItem Content="12345678900" />
-                                    <ListViewItem Content="12345678900" />
-                                    <ListViewItem Content="12345678900" />
-                                    <ListViewItem Content="12345678900" />
-                                    <ListViewItem Content="12345678900" />
-                                </ListView>
+                                <ListView
+                                    Grid.Row="1"
+                                    Margin="0,10,0,0"
+                                    ItemsSource="{Binding ViewModel.PhoneNumbers}"
+                                    SelectedValue="{Binding ViewModel.SelectedPhoneNumber}" />
                             </Grid>
                             <Grid Grid.Column="1" Margin="39,0,0,0">
                                 <Grid.RowDefinitions>
@@ -247,18 +296,57 @@
                                     d:Foreground="Black"
                                     FontSize="{StaticResource LargeFontSize}"
                                     Text="此号码可能的来源" />
-                                <ListView Grid.Row="1" Margin="0,10,0,0">
-                                    <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                                    <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                                    <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                                    <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                                    <ListViewItem Content="https://github.com/RemeaMiku/.NET-Framework-Programming" />
-                                </ListView>
+                                <ListView
+                                    Grid.Row="1"
+                                    Margin="0,10,0,0"
+                                    ItemsSource="{Binding ViewModel.Souces}" />
                             </Grid>
                         </Grid>
                     </Border>
                 </Grid>
             </Border>
         </Grid>
+        <Grid Grid.Row="2">
+            <Grid Margin="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ui:InfoBar
+                    Padding="3"
+                    d:Message="https://github/RemeaMiku"
+                    IsClosable="False"
+                    IsOpen="True"
+                    Message="{Binding ViewModel.InfoText}" />
+                <Grid Grid.Column="1">
+                    <ProgressBar
+                        Width="300"
+                        Height="20"
+                        Margin="5,0,0,0"
+                        d:Value="39"
+                        Maximum="{Binding ViewModel.TargetCount}"
+                        Minimum="0"
+                        Value="{Binding ViewModel.Progress}" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        d:Foreground="Black"
+                        d:Text="39/100(39%)">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}{0}/{1}({2}%)">
+                                <Binding Path="ViewModel.Progress" />
+                                <Binding Path="ViewModel.TargetCount" />
+                                <Binding Path="ViewModel.ProgressAsPercentage" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                </Grid>
+
+            </Grid>
+        </Grid>
+        <ui:Snackbar
+            x:Name="Snackbar"
+            Grid.RowSpan="3"
+            Panel.ZIndex="1000"
+            Timeout="3900" />
     </Grid>
 </ui:UiWindow>

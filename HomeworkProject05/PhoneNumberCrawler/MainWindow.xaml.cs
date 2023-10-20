@@ -2,9 +2,12 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using Microsoft.Extensions.DependencyInjection;
+using PhoneNumberCrawler.ViewModels;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Common;
 using Wpf.Ui.Controls;
+using Wpf.Ui.Mvvm.Contracts;
 
 namespace PhoneNumberCrawler;
 
@@ -13,20 +16,20 @@ namespace PhoneNumberCrawler;
 /// </summary>
 public partial class MainWindow : UiWindow
 {
-    #region Public Constructors
 
-    public MainWindow()
+    public MainWindow(MainWindowViewModel viewModel)
     {
         InitializeComponent();
+        DataContext = this;
+        ViewModel = viewModel;
+        App.Current.ServiceProvider.GetRequiredService<ISnackbarService>().SetSnackbarControl(Snackbar);
         if (Theme.GetSystemTheme() == SystemThemeType.Dark)
             OnThemeToggleButtonClick(this, new());
         else
             Theme.Apply(ThemeType.Light, WindowBackdropType, true, true);
     }
 
-    #endregion Public Constructors
-
-    #region Public Methods
+    public MainWindowViewModel ViewModel { get; }
 
     public static Point GetMouseScreenPosition(Window window)
     {
@@ -36,37 +39,30 @@ public partial class MainWindow : UiWindow
         return result;
     }
 
-    #endregion Public Methods
-
-    #region Private Fields
-
     const SymbolRegular _lightModeIcon = SymbolRegular.WeatherSunny24;
 
     const SymbolRegular _darkModeIcon = SymbolRegular.WeatherMoon24;
 
     private bool _restoreForDragMove;
 
-    #endregion Private Fields
-
-    #region Private Methods
-
     private void OnExpandButtonClicked(object sender, RoutedEventArgs e)
     {
-        if (OptionsPanel.Width == 0)
+        if (ExpandPanel.Width == 0)
         {
-            var animation = new DoubleAnimation(300, TimeSpan.FromSeconds(0.3))
+            var animation = new DoubleAnimation(ExpandPanel.MaxWidth, TimeSpan.FromSeconds(0.3))
             {
-                EasingFunction = new QuadraticEase() { EasingMode = EasingMode.EaseOut }
+                EasingFunction = new QuadraticEase() { EasingMode = EasingMode.EaseOut },
             };
-            OptionsPanel.BeginAnimation(WidthProperty, animation);
+            ExpandPanel.BeginAnimation(WidthProperty, animation);
         }
         else
         {
+            ExpandPanel.Tag = ExpandPanel.MaxWidth;
             var animation = new DoubleAnimation(0, TimeSpan.FromSeconds(0.3))
             {
                 EasingFunction = new QuadraticEase() { EasingMode = EasingMode.EaseOut }
             };
-            OptionsPanel.BeginAnimation(WidthProperty, animation);
+            ExpandPanel.BeginAnimation(WidthProperty, animation);
         }
     }
     private void OnThemeToggleButtonClick(object sender, RoutedEventArgs e)
@@ -107,7 +103,8 @@ public partial class MainWindow : UiWindow
             Left = point.X - (RestoreBounds.Width * 0.5);
             Top = point.Y;
             WindowState = WindowState.Normal;
-            DragMove();
+            if (Mouse.LeftButton == MouseButtonState.Pressed)
+                DragMove();
         }
     }
     private void OnTitleBarMouseUp(object sender, MouseButtonEventArgs e)
@@ -128,5 +125,19 @@ public partial class MainWindow : UiWindow
     private void OnTitleBarMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         => SystemCommands.ShowSystemMenu(this, GetMouseScreenPosition(this));
 
-    #endregion Private Methods
+    private void OnNumberBoxTextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (sender is NumberBox box)
+            if (string.IsNullOrWhiteSpace(box.Text))
+                box.Text = box.Minimum.ToString();
+    }
+
+    private void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        ExpandPanel.MaxWidth = 0.6 * e.NewSize.Width;
+        if (ExpandPanel.Width != 0)
+        {
+            OnExpandButtonClicked(sender, e);
+        }
+    }
 }

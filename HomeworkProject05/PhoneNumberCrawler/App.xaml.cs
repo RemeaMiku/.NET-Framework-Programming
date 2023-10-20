@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using PhoneNumberCrawler.Services;
+using PhoneNumberCrawler.ViewModels;
+using Wpf.Ui.Mvvm.Contracts;
+using Wpf.Ui.Mvvm.Services;
 
 namespace PhoneNumberCrawler;
 
@@ -15,6 +19,9 @@ public partial class App : Application
 
     public IServiceProvider ServiceProvider { get; }
     = new ServiceCollection()
+        .AddSingleton<BingPhoneNumberCrawlerService>()
+        .AddSingleton<ISnackbarService, SnackbarService>()
+        .AddSingleton<MainWindowViewModel>()
         .AddSingleton<MainWindow>()
         .BuildServiceProvider();
 

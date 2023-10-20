@@ -11,72 +11,75 @@ namespace PhoneNumberCrawler.Services;
 
 public partial class BingPhoneNumberCrawlerService
 {
-    public record class SearchResult(string PhoneNumber, HashSet<Uri> Sources);
+    #region Public Events
 
-    #region Public Fields
+    public event EventHandler<UriChangedEventArgs>? UriChanged;
 
-    public EventHandler<UriChangedEventArgs>? UriChanged;
+    public event EventHandler<NewPhoneNumberSearchedEventArgs>? NewPhoneNumberSearched;
 
-    public EventHandler<SearchResultsChangedEventArgs>? SearchResultsChanged;
+    public event EventHandler<SourcesUpdatedEventArgs>? SourcesUpdated;
 
-    #endregion Public Fields
-
-    #region Public Constructors
-
-    public BingPhoneNumberCrawlerService(int targetCount, int maxUriCount)
-    {
-        ValidateArguments(targetCount, maxUriCount);
-        TargetCount = targetCount;
-        MaxUriCount = maxUriCount;
-    }
-
-    #endregion Public Constructors
+    #endregion Public Events
 
     #region Public Properties
 
-    public int TargetCount { get; }
+    public int TargetCount { get; private set; } = 100;
 
-    public int MaxUriCount { get; }
+    public int MaxUriCount { get; private set; } = 100_000;
+
+    public AggregateException? Exception { get; private set; }
 
     #endregion Public Properties
 
     #region Public Methods
 
-    public IEnumerable<SearchResult>? Search(string keyword)
+    public BingPhoneNumberCrawlerService Reset()
     {
-        var initSearchLink = _initBingSearchLink + keyword;
-        using var client = new HttpClient() { Timeout = TimeSpan.FromSeconds(10) };
-        using var tokenSource = new CancellationTokenSource();
+        _searchResults.Clear();
+        _visitedUris.Clear();
+        Exception = default;
+        return this;
+    }
+
+    public record class SearchResult(string PhoneNumber, HashSet<Uri> Sources);
+    public IEnumerable<SearchResult>? Search(string keyword, int targetCount, int maxUriCount)
+    {
+        ValidateArguments(targetCount, maxUriCount);
+        TargetCount = targetCount;
+        MaxUriCount = maxUriCount;
+        var initSearchUrl = _initBingSearchLink + keyword;
+        using var client = new HttpClient();
+        _tokenSource = new CancellationTokenSource();
         var exceptions = new ConcurrentQueue<Exception>();
         try
         {
             var r = Parallel.For(0, MaxUriCount, new ParallelOptions
             {
-                CancellationToken = tokenSource.Token,
+                CancellationToken = _tokenSource.Token,
                 MaxDegreeOfParallelism = 39
             }, (i) =>
             {
                 try
                 {
-                    var currentUri = new Uri($"{initSearchLink}&first={i}0");
+                    var currentUri = new Uri($"{initSearchUrl}&first={i}0");
+                    var response = client.GetAsync(currentUri).Result;
+                    if (!response.IsSuccessStatusCode)
+                        return;
                     var html = client.GetStringAsync(currentUri).Result;
-                    ExtractPhoneNumbersFromHtml(currentUri, html, tokenSource);
-                    foreach (var uri in ExtractUrisFromHtml(html, tokenSource))
-                        ExtractPhoneNumbersFromHtml(uri, html, tokenSource);
-                }
-                catch (HttpRequestException ex)
-                {
-                    exceptions.Enqueue(ex);
-                }
-                catch (TaskCanceledException)
-                {
+                    ExtractPhoneNumbersFromHtml(currentUri, html, _tokenSource);
+                    foreach (var uri in ExtractUrisFromHtml(html, _tokenSource))
+                        ExtractPhoneNumbersFromHtml(uri, html, _tokenSource);
                 }
                 catch (AggregateException ae)
                 {
                     foreach (var ex in ae.InnerExceptions)
                     {
                         if (ex is HttpRequestException)
+                        {
                             exceptions.Enqueue(ex);
+                            if (!_tokenSource.IsCancellationRequested)
+                                _tokenSource.Cancel();
+                        }
                         else if (ex is not TaskCanceledException)
                             throw ex;
                     }
@@ -84,49 +87,69 @@ public partial class BingPhoneNumberCrawlerService
                 catch (Exception ex)
                 {
                     exceptions.Enqueue(ex);
-                    if (!tokenSource.IsCancellationRequested)
-                        tokenSource.Cancel();
+                    if (!_tokenSource.IsCancellationRequested)
+                        _tokenSource.Cancel();
                 }
             });
-            return EnumerateSearchResultsIfHasNoException(exceptions);
+            return EnumerateSearchResultsAndCheckExceptions(exceptions);
         }
         catch (OperationCanceledException)
         {
-            return EnumerateSearchResultsIfHasNoException(exceptions);
-        }
-        catch (Exception ex)
-        {
-            exceptions.Enqueue(ex);
-            throw new AggregateException(exceptions);
+            return EnumerateSearchResultsAndCheckExceptions(exceptions);
         }
         finally
         {
-            _searchResults.Clear();
-            _visitedUris.Clear();
+            _tokenSource.Dispose();
+            _tokenSource = null;
         }
+    }
+
+    public void Cancel()
+    {
+        if (_tokenSource is null)
+            throw new InvalidOperationException("Search not yet started.");
+        _tokenSource.Cancel();
+    }
+
+    public IEnumerable<Uri> GetSources(string phoneNumber)
+    {
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+            throw new ArgumentNullException(nameof(phoneNumber), "The phone number is null or empty.");
+        if (!_searchResults.TryGetValue(phoneNumber, out var sources))
+            throw new InvalidOperationException("The specific phone number could not be found");
+        else
+            return sources;
     }
 
     #endregion Public Methods
 
     #region Public Classes
 
-    public class SearchResultsChangedEventArgs(int progress, Uri currentUri, SearchResult result) : EventArgs
+    public class NewPhoneNumberSearchedEventArgs(int progress, string phoneNumber) : EventArgs
     {
         #region Public Properties
 
         public int Progress { get; } = progress;
-        public SearchResult Result { get; } = result;
+        public string PhoneNumber { get; } = phoneNumber;
+
+        #endregion Public Properties
+    }
+
+    public class UriChangedEventArgs(Uri currentUri) : EventArgs
+    {
+        #region Public Properties
+
         public Uri CurrentUri { get; } = currentUri;
 
         #endregion Public Properties
     }
 
-    public class UriChangedEventArgs(int progress, Uri currentUri) : EventArgs
+    public class SourcesUpdatedEventArgs(string phoneNumber, Uri newSource) : EventArgs
     {
         #region Public Properties
 
-        public int Progress { get; } = progress;
-        public Uri CurrentUri { get; } = currentUri;
+        public string PhoneNumber { get; } = phoneNumber;
+        public Uri NewSource { get; } = newSource;
 
         #endregion Public Properties
     }
@@ -139,11 +162,13 @@ public partial class BingPhoneNumberCrawlerService
 
     static readonly Regex _httpUrlRegex = HttpUrlRegex();
 
-    static readonly string _initBingSearchLink = "https://cn.bing.com/search?q=";
+    static readonly string _initBingSearchLink = "https://bing.com/search?q=";
 
     readonly ConcurrentDictionary<string, HashSet<Uri>> _searchResults = new();
 
     readonly ConcurrentBag<Uri> _visitedUris = new();
+
+    CancellationTokenSource? _tokenSource;
 
     #endregion Private Fields
 
@@ -159,14 +184,14 @@ public partial class BingPhoneNumberCrawlerService
     {
         if (targetCount <= 0 || targetCount > 999)
             throw new ArgumentOutOfRangeException(nameof(targetCount), "The target count of phone numbrs should be greater than 1.");
-        if (maxUriCount <= 0 || maxUriCount > 99_9999)
+        if (maxUriCount <= 0 || maxUriCount > 999_999)
             throw new ArgumentOutOfRangeException(nameof(maxUriCount), "The maximize count of uri should be greater than 1.");
     }
 
-    IEnumerable<SearchResult> EnumerateSearchResultsIfHasNoException(ConcurrentQueue<Exception> exceptions)
+    IEnumerable<SearchResult> EnumerateSearchResultsAndCheckExceptions(ConcurrentQueue<Exception> exceptions)
     {
         if (!exceptions.IsEmpty)
-            throw new AggregateException(exceptions);
+            Exception = new AggregateException(exceptions);
         var count = 1;
         foreach ((var phoneNumber, var source) in _searchResults)
         {
@@ -203,22 +228,24 @@ public partial class BingPhoneNumberCrawlerService
         ValidateHtml(html);
         if (!CheckVisitedUris(currentUri, tokenSource))
             return;
-        UriChanged?.Invoke(this, new(_visitedUris.Count, currentUri));
+        UriChanged?.Invoke(this, new(currentUri));
         var matches = _phoneRegex.Matches(html);
         foreach (var match in matches.Cast<Match>())
         {
             if (_searchResults.Count >= TargetCount && !tokenSource.IsCancellationRequested)
                 tokenSource.Cancel();
             var phoneNumber = match.Value;
-            var sourcesChanged = false;
-            var sources = _searchResults.AddOrUpdate(phoneNumber, new HashSet<Uri>() { currentUri }, (p, l) =>
+            lock (_searchResults)
             {
-                sourcesChanged = l.Add(currentUri);
-                return l;
-            });
-            if (sourcesChanged || sources.Count == 1)
-            {
-                SearchResultsChanged?.Invoke(this, new(_searchResults.Count, currentUri, new(phoneNumber, _searchResults[phoneNumber])));
+                var sources = _searchResults.GetOrAdd(phoneNumber, new HashSet<Uri>());
+                lock (sources)
+                {
+                    if (sources.Count == 0)
+                        NewPhoneNumberSearched?.Invoke(this, new(_searchResults.Count, phoneNumber));
+                    else
+                        SourcesUpdated?.Invoke(this, new(phoneNumber, currentUri));
+                    sources.Add(currentUri);
+                }
             }
         }
     }
