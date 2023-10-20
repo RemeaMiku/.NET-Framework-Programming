@@ -264,7 +264,7 @@
                     </StackPanel>
                     <Border
                         Grid.Row="2"
-                        Padding="20"
+                        Padding="39,10"
                         d:Visibility="Visible"
                         Visibility="{Binding ViewModel.HasSearched, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <Grid>
@@ -318,7 +318,7 @@
                     IsClosable="False"
                     IsOpen="True"
                     Message="{Binding ViewModel.InfoText}" />
-                <Grid Grid.Column="1">
+                <Grid Grid.Column="1" Visibility="{Binding ViewModel.IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <ProgressBar
                         Width="300"
                         Height="20"
@@ -340,7 +340,6 @@
                         </TextBlock.Text>
                     </TextBlock>
                 </Grid>
-
             </Grid>
         </Grid>
         <ui:Snackbar

@@ -17,6 +17,8 @@ namespace PhoneNumberCrawler;
 public partial class MainWindow : UiWindow
 {
 
+    #region Public Constructors
+
     public MainWindow(MainWindowViewModel viewModel)
     {
         InitializeComponent();
@@ -29,7 +31,15 @@ public partial class MainWindow : UiWindow
             Theme.Apply(ThemeType.Light, WindowBackdropType, true, true);
     }
 
+    #endregion Public Constructors
+
+    #region Public Properties
+
     public MainWindowViewModel ViewModel { get; }
+
+    #endregion Public Properties
+
+    #region Public Methods
 
     public static Point GetMouseScreenPosition(Window window)
     {
@@ -39,11 +49,19 @@ public partial class MainWindow : UiWindow
         return result;
     }
 
+    #endregion Public Methods
+
+    #region Private Fields
+
     const SymbolRegular _lightModeIcon = SymbolRegular.WeatherSunny24;
 
     const SymbolRegular _darkModeIcon = SymbolRegular.WeatherMoon24;
 
     private bool _restoreForDragMove;
+
+    #endregion Private Fields
+
+    #region Private Methods
 
     private void OnExpandButtonClicked(object sender, RoutedEventArgs e)
     {
@@ -136,8 +154,8 @@ public partial class MainWindow : UiWindow
     {
         ExpandPanel.MaxWidth = 0.6 * e.NewSize.Width;
         if (ExpandPanel.Width != 0)
-        {
             OnExpandButtonClicked(sender, e);
-        }
     }
+
+    #endregion Private Methods
 }
