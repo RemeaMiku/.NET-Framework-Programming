@@ -146,7 +146,7 @@
                                     FontSize="{StaticResource MediumFontSize}"
                                     Header="选项"
                                     Icon="Options24">
-                                    <StackPanel Orientation="Vertical">
+                                    <StackPanel IsEnabled="{Binding ViewModel.IsNotBusy}" Orientation="Vertical">
                                         <TextBlock
                                             d:Foreground="Black"
                                             Style="{StaticResource OptionTextStyle}"

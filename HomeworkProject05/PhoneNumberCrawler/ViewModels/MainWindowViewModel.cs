@@ -51,6 +51,8 @@ public partial class MainWindowViewModel : ObservableValidator
 
     public List<string> UrlHistory { get; private set; } = new();
 
+    public bool IsNotBusy => !IsBusy;
+
     #endregion Public Properties
 
     #region Private Fields
@@ -62,8 +64,8 @@ public partial class MainWindowViewModel : ObservableValidator
     readonly ISnackbarService _snackbarService;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNotBusy))]
     bool _isBusy = false;
-
     [ObservableProperty]
     bool _hasSearched = false;
 
@@ -146,7 +148,7 @@ public partial class MainWindowViewModel : ObservableValidator
             if (_bingPhoneNumberCrawlerService.Exception is not null)
                 _snackbarService.Show("错误", $"发生了错误，已停止搜索：{_bingPhoneNumberCrawlerService.Exception.Message}", SymbolRegular.Dismiss24, ControlAppearance.Danger);
             else
-                _snackbarService.Show("成功", $"搜索已结束", SymbolRegular.Checkmark24, ControlAppearance.Success);
+                _snackbarService.Show("完成", $"搜索已结束", SymbolRegular.Checkmark24, ControlAppearance.Success);
         }
         catch (Exception ex)
         {
