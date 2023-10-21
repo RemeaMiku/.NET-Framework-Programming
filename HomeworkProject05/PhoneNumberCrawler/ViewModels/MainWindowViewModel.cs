@@ -66,6 +66,7 @@ public partial class MainWindowViewModel : ObservableValidator
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsNotBusy))]
     bool _isBusy = false;
+
     [ObservableProperty]
     bool _hasSearched = false;
 
@@ -103,6 +104,7 @@ public partial class MainWindowViewModel : ObservableValidator
         Progress = 0;
         InfoText = _readyText;
     }
+
     [RelayCommand]
     void Cancel()
     {
