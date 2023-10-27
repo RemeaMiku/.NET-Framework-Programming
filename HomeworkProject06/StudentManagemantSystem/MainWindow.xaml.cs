@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Windows;
-using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using CommunityToolkit.Mvvm.Messaging;
-using StudentManagemantSystem.Models;
 using StudentManagemantSystem.ViewModels;
 using Wpf.Ui.Appearance;
+using Wpf.Ui.Common;
 using Wpf.Ui.Controls;
-using Wpf.Ui.Markup;
-using Wpf.Ui.Mvvm.Interfaces;
 
 namespace StudentManagemantSystem;
 
@@ -21,6 +17,8 @@ namespace StudentManagemantSystem;
 /// </summary>
 public partial class MainWindow : UiWindow, IRecipient<string>
 {
+    #region Public Constructors
+
     public MainWindow(MainWindowViewModel viewModel)
     {
         InitializeComponent();
@@ -37,11 +35,35 @@ public partial class MainWindow : UiWindow, IRecipient<string>
         WeakReferenceMessenger.Default.Register(this);
     }
 
+    #endregion Public Constructors
+
+    #region Public Properties
+
     public MainWindowViewModel ViewModel { get; }
+
+    #endregion Public Properties
+
+    #region Public Methods
+
+    public void Receive(string message)
+    {
+        if (message == "Saved")
+            DataGrid.Items.Refresh();
+    }
+
+    #endregion Public Methods
+
+    #region Private Fields
+
+    readonly List<Button> _navigateButtons;
+
+    #endregion Private Fields
+
+    #region Private Methods
 
     private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
     {
-        Watcher.Watch(this, BackgroundType.Acrylic);
+        OnThemeButtonClicked(sender, e);
         OnNavigateButtonClicked(StudentsNavigateButton, new());
     }
 
@@ -49,9 +71,6 @@ public partial class MainWindow : UiWindow, IRecipient<string>
     {
         e.Column.Header = ((PropertyDescriptor)e.PropertyDescriptor).DisplayName;
     }
-
-    readonly List<Button> _navigateButtons;
-
     private void OnNavigateButtonClicked(object sender, RoutedEventArgs e)
     {
         foreach (var button in _navigateButtons)
@@ -71,6 +90,7 @@ public partial class MainWindow : UiWindow, IRecipient<string>
             storyboard.Begin(currentButton);
             currentButton.IconFilled = true;
             ViewModel.EntityTypeName = (string)currentButton.Tag;
+            ViewModel.Refresh();
             DataGrid.SetBinding(System.Windows.Controls.ItemsControl.ItemsSourceProperty, string.Join('.', nameof(ViewModel), $"{ViewModel.EntityTypeName}Collection"));
             DataGrid.Items.Refresh();
         }
@@ -88,51 +108,25 @@ public partial class MainWindow : UiWindow, IRecipient<string>
                 column.IsReadOnly = true;
         }
     }
-
-    public void Receive(string message)
-    {
-        if (message == "Saved")
-            DataGrid.Items.Refresh();
-    }
-
     private void OnSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
         if (ViewModel.IsNotBusy)
-        {
             ViewModel.SelectedItems = DataGrid.SelectedItems.Count == 0 ? default : DataGrid.SelectedItems;
-        }
-
-        //if (ViewModel.IsNotBusy)
-        //{
-        //    if (DataGrid.SelectedItems.Count == 0)
-        //    {
-        //        ViewModel.HasSelection = false;
-        //        ViewModel.StudentSelectedCollection.Clear();
-        //        ViewModel.ClassSelectedCollection.Clear();
-        //        ViewModel.SchoolSelectedCollection.Clear();
-        //        return;
-        //    }
-        //    ViewModel.HasSelection = true;
-        //    switch (ViewModel.EntityTypeName)
-        //    {
-        //        case nameof(Student):
-        //            ViewModel.StudentSelectedCollection = (IList<Student>?)DataGrid.SelectedItems;
-        //            ViewModel.ClassSelectedCollection.Clear();
-        //            ViewModel.SchoolSelectedCollection.Clear();
-        //            break;
-        //        case nameof(Class):
-        //            ViewModel.ClassSelectedCollection = (IList<Class>?)DataGrid.SelectedItems;
-        //            ViewModel.StudentSelectedCollection.Clear();
-        //            ViewModel.SchoolSelectedCollection.Clear();
-        //            break;
-        //        case nameof(School):
-        //            ViewModel.SchoolSelectedCollection = (IList<School>?)DataGrid.SelectedItems;
-        //            ViewModel.StudentSelectedCollection.Clear();
-        //            ViewModel.ClassSelectedCollection.Clear();
-        //            break;
-        //        default:
-        //            throw new NotImplementedException();
-        //    }
-        //}
     }
+
+    private void OnThemeButtonClicked(object sender, RoutedEventArgs e)
+    {
+        if (Theme.GetAppTheme() == ThemeType.Light)
+        {
+            Theme.Apply(ThemeType.Dark, WindowBackdropType, true, true);
+            ThemeButton.Icon = SymbolRegular.WeatherSunny24;
+        }
+        else
+        {
+            Theme.Apply(ThemeType.Light, WindowBackdropType, true, true);
+            ThemeButton.Icon = SymbolRegular.WeatherMoon24;
+        }
+    }
+
+    #endregion Private Methods
 }

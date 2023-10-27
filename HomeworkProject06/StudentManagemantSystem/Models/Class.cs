@@ -1,5 +1,4 @@
-﻿// Author : RemeaMiku (Wuhan University) E-mail : remeamiku@whu.edu.cn
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace StudentManagemantSystem.Models;
@@ -27,7 +26,7 @@ public class Class
     public ICollection<Student> Students { get; set; } = null!;
 
     [DisplayName("描述")]
-    public string? Description { get; set; }
+    public string Description { get; set; } = string.Empty;
 
     #endregion Public Properties
 

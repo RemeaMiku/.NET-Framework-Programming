@@ -24,6 +24,7 @@ namespace StudentManagemantSystem.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Grade")
@@ -50,23 +51,26 @@ namespace StudentManagemantSystem.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<int>("EntityId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("EntityType")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("EntityTypeName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
-                    b.Property<int>("OperationType")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("OperationType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("Time")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Logs");
+                    b.ToTable("LogTable");
                 });
 
             modelBuilder.Entity("StudentManagemantSystem.Models.School", b =>
@@ -76,6 +80,7 @@ namespace StudentManagemantSystem.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -97,6 +102,7 @@ namespace StudentManagemantSystem.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Gender")

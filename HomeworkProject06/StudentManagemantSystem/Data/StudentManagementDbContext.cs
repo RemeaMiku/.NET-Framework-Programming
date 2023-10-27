@@ -1,26 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.EntityFrameworkCore;
 using StudentManagemantSystem.Models;
 
 namespace StudentManagemantSystem.Data;
 
 public class StudentManagementDbContext : DbContext
 {
-    public DbSet<School> SchoolTable { get; set; } = null!;
-
-    public DbSet<Class> ClassTable { get; set; } = null!;
-
-    public DbSet<Student> StudentTable { get; set; } = null!;
-
-    public DbSet<Log> Logs { get; set; } = null!;
-
-    public string DbPath { get; init; }
+    #region Public Constructors
 
     public StudentManagementDbContext()
     {
@@ -32,7 +17,27 @@ public class StudentManagementDbContext : DbContext
         DbPath = dbPath;
     }
 
+    #endregion Public Constructors
+
+    #region Public Properties
+
+    public DbSet<School> SchoolTable { get; set; } = null!;
+
+    public DbSet<Class> ClassTable { get; set; } = null!;
+
+    public DbSet<Student> StudentTable { get; set; } = null!;
+
+    public DbSet<Log> LogTable { get; set; } = null!;
+
+    public string DbPath { get; init; }
+
+    #endregion Public Properties
+
+    #region Protected Methods
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlite($"Data Source={DbPath}");
+
+    #endregion Protected Methods
 
 }

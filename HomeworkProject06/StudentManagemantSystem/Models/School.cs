@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace StudentManagemantSystem.Models;
 
 public class School
 {
+    #region Public Properties
+
     [DisplayName("学校Id")]
     public int Id { get; set; }
     [DisplayName("学校名称")]
@@ -17,7 +14,13 @@ public class School
     [DisplayName("班级集合")]
     public ICollection<Class> Classes { get; set; } = null!;
     [DisplayName("描述")]
-    public string? Description { get; set; }
+    public string Description { get; set; } = string.Empty;
+
+    #endregion Public Properties
+
+    #region Public Methods
 
     public override string ToString() => Name;
+
+    #endregion Public Methods
 }

@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 
 namespace StudentManagemantSystem.Models;
 
 public class Student
 {
+    #region Public Properties
+
     [DisplayName("学生Id")]
     public int Id { get; set; }
     [DisplayName("学生姓名")]
@@ -22,7 +17,9 @@ public class Student
     [DisplayName("所属班级名称")]
     public Class Class { get; set; } = null!;
     [DisplayName("描述")]
-    public string? Description { get; set; }
+    public string Description { get; set; } = string.Empty;
+
+    #endregion Public Properties
 }
 
 public enum Gender
