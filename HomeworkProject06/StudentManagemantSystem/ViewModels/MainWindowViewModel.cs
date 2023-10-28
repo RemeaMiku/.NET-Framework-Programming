@@ -23,11 +23,17 @@ namespace StudentManagemantSystem.ViewModels;
 public partial class MainWindowViewModel : ObservableObject
 {
 
+    #region Public Fields
+
+    public ISnackbarService _snackbarService;
+
+    #endregion Public Fields
+
     #region Public Constructors
 
     public MainWindowViewModel(ISnackbarService snackbarService)
     {
-        SnackbarService = snackbarService;
+        _snackbarService = snackbarService;
     }
 
     #endregion Public Constructors
@@ -43,9 +49,6 @@ public partial class MainWindowViewModel : ObservableObject
     public CollectionViewSource DataGridViewSource { get; } = new();
 
     public CollectionViewSource LogViewSource { get; } = new();
-
-    public ISnackbarService SnackbarService { get; }
-
     public bool IsNotBusy => !IsBusy;
 
     public ObservableCollection<string> DisplayNames { get; } = new();
@@ -94,6 +97,18 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     #endregion Public Properties
+
+    #region Public Methods
+
+    public void DisconnectFromDatabase()
+    {
+        if (_dbContext is null)
+            return;
+        _dbContext.Dispose();
+        _dbContext = null;
+    }
+
+    #endregion Public Methods
 
     #region Private Fields
 
@@ -184,14 +199,11 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (!Path.Exists(DbPath))
         {
-            SnackbarService.Show("连接失败", $"{DbPath} 不存在", SymbolRegular.Dismiss24, ControlAppearance.Danger);
+            _snackbarService.Show("连接失败", $"{DbPath} 不存在", SymbolRegular.Dismiss24, ControlAppearance.Danger);
             return;
         }
         if (_dbContext is not null)
-        {
-            _dbContext.Dispose();
-            _dbContext = null;
-        }
+            DisconnectFromDatabase();
         try
         {
             IsBusy = true;
@@ -203,7 +215,7 @@ public partial class MainWindowViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            SnackbarService.Show("连接出错：", ex.Message, SymbolRegular.Dismiss24, ControlAppearance.Danger);
+            _snackbarService.Show("连接出错：", ex.Message, SymbolRegular.Dismiss24, ControlAppearance.Danger);
             InfoMessage = $"连接 {DbPath} 出错";
         }
         finally
@@ -337,7 +349,7 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (@class.Students is not null && @class.Students.Any())
         {
-            SnackbarService.Show("删除被阻止", $"有学生属于 Id：{@class.Id}, Name：{@class.Name} 的班级。请先删除其学生或将学生转移至其他班级。", SymbolRegular.DeleteDismiss24, ControlAppearance.Caution);
+            _snackbarService.Show("删除被阻止", $"有学生属于 Id：{@class.Id}, Name：{@class.Name} 的班级。请先删除其学生或将学生转移至其他班级。", SymbolRegular.DeleteDismiss24, ControlAppearance.Caution);
             return;
         }
         _dbContext!.ClassTable.Remove(@class);
@@ -347,7 +359,7 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (school.Classes is not null && school.Classes.Any())
         {
-            SnackbarService.Show("删除被阻止", $"有班级属于 Id：{school.Id}, Name：{school.Name} 的学校。请先删除其班级或将班级转移至其他学校。", SymbolRegular.DeleteDismiss24, ControlAppearance.Caution);
+            _snackbarService.Show("删除被阻止", $"有班级属于 Id：{school.Id}, Name：{school.Name} 的学校。请先删除其班级或将班级转移至其他学校。", SymbolRegular.DeleteDismiss24, ControlAppearance.Caution);
             return;
         }
         _dbContext!.SchoolTable.Remove(school);
@@ -388,7 +400,7 @@ public partial class MainWindowViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            SnackbarService.Show("程序异常", ex.Message, SymbolRegular.Dismiss24, ControlAppearance.Danger);
+            _snackbarService.Show("程序异常", ex.Message, SymbolRegular.Dismiss24, ControlAppearance.Danger);
         }
         finally
         {
@@ -412,13 +424,16 @@ public partial class MainWindowViewModel : ObservableObject
             }
             IsBusy = true;
             InfoMessage = "正在尝试保存更改";
-            var status = await _dbContext.SaveChangesAsync();
+            //保存数据表，同时日志表产生新的更改
+            await _dbContext.SaveChangesAsync();
+            //保存日志表
+            await _dbContext.SaveChangesAsync();
             DataGridViewSource.View.Refresh();
-            SnackbarService.Show("已成功保存", $"数据库路径：{_dbContext.DbPath}", SymbolRegular.Checkmark24, ControlAppearance.Success);
+            _snackbarService.Show("已成功保存", $"数据库路径：{_dbContext.DbPath}", SymbolRegular.Checkmark24, ControlAppearance.Success);
         }
         catch (Exception ex)
         {
-            SnackbarService.Show("保存失败", $"可能是约束冲突，请检查输入后重试：{Environment.NewLine}{ex.Message}{Environment.NewLine}{ex.InnerException?.Message}", SymbolRegular.Dismiss24, ControlAppearance.Danger);
+            _snackbarService.Show("保存失败", $"可能是约束冲突，请检查输入后重试：{Environment.NewLine}{ex.Message}{Environment.NewLine}{ex.InnerException?.Message}", SymbolRegular.Dismiss24, ControlAppearance.Danger);
         }
         finally
         {
@@ -439,7 +454,7 @@ public partial class MainWindowViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            SnackbarService.Show("程序异常", ex.Message, SymbolRegular.Dismiss24, ControlAppearance.Danger);
+            _snackbarService.Show("程序异常", ex.Message, SymbolRegular.Dismiss24, ControlAppearance.Danger);
         }
         finally
         {

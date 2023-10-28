@@ -9,6 +9,7 @@ using StudentManagemantSystem.ViewModels;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Common;
 using Wpf.Ui.Controls;
+using Wpf.Ui.Mvvm.Contracts;
 
 namespace StudentManagemantSystem;
 
@@ -17,18 +18,24 @@ namespace StudentManagemantSystem;
 /// </summary>
 public partial class MainWindow : UiWindow
 {
+
     #region Public Constructors
 
-    public MainWindow(MainWindowViewModel viewModel)
+    public MainWindow(ISnackbarService snackbarService, MainWindowViewModel viewModel)
     {
         InitializeComponent();
         DataContext = this;
         ViewModel = viewModel;
-        ViewModel.SnackbarService.SetSnackbarControl(Snackbar);
+        snackbarService.SetSnackbarControl(Snackbar);
         _navigateButtons.Add(StudentsNavigateButton);
         _navigateButtons.Add(ClassesNavigateButton);
         _navigateButtons.Add(SchoolsNavigateButton);
-        Loaded += OnMainWindowLoaded;
+        Loaded += (sender, e) =>
+        {
+            OnThemeButtonClicked(sender, e);
+            OnNavigateButtonClicked(StudentsNavigateButton, new());
+        };
+        Closing += (sender, e) => ViewModel.DisconnectFromDatabase();
         //连接数据库。因时间有限，没有做登录连接界面，在这里直接执行命令
         //路径为当前路径的BlueArchive.db
         ViewModel.DbPath = Path.Combine(Environment.CurrentDirectory, "BlueArchive.db");
@@ -43,10 +50,6 @@ public partial class MainWindow : UiWindow
 
     #endregion Public Properties
 
-    #region Public Methods
-
-    #endregion Public Methods
-
     #region Private Fields
 
     readonly List<Button> _navigateButtons = new();
@@ -54,12 +57,6 @@ public partial class MainWindow : UiWindow
     #endregion Private Fields
 
     #region Private Methods
-
-    private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
-    {
-        OnThemeButtonClicked(sender, e);
-        OnNavigateButtonClicked(StudentsNavigateButton, new());
-    }
 
     private void OnDataGridAutoGeneratingColumn(object sender, System.Windows.Controls.DataGridAutoGeneratingColumnEventArgs e)
     {
@@ -118,4 +115,5 @@ public partial class MainWindow : UiWindow
     }
 
     #endregion Private Methods
+
 }
