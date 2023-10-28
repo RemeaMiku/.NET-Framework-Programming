@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using CommunityToolkit.Mvvm.Messaging;
 using StudentManagemantSystem.ViewModels;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Common;
@@ -15,7 +15,7 @@ namespace StudentManagemantSystem;
 /// <summary>
 /// Interaction logic for MainWindow.xaml
 /// </summary>
-public partial class MainWindow : UiWindow, IRecipient<string>
+public partial class MainWindow : UiWindow
 {
     #region Public Constructors
 
@@ -23,16 +23,16 @@ public partial class MainWindow : UiWindow, IRecipient<string>
     {
         InitializeComponent();
         DataContext = this;
-        Loaded += OnMainWindowLoaded;
         ViewModel = viewModel;
         ViewModel.SnackbarService.SetSnackbarControl(Snackbar);
-        _navigateButtons = new()
-        {
-            StudentsNavigateButton,
-            ClassesNavigateButton,
-            SchoolsNavigateButton
-        };
-        WeakReferenceMessenger.Default.Register(this);
+        _navigateButtons.Add(StudentsNavigateButton);
+        _navigateButtons.Add(ClassesNavigateButton);
+        _navigateButtons.Add(SchoolsNavigateButton);
+        Loaded += OnMainWindowLoaded;
+        //连接数据库。因时间有限，没有做登录连接界面，在这里直接执行命令
+        //路径为当前路径的BlueArchive.db
+        ViewModel.DbPath = Path.Combine(Environment.CurrentDirectory, "BlueArchive.db");
+        ViewModel.ConnectToDatabaseCommand.Execute(null);
     }
 
     #endregion Public Constructors
@@ -45,17 +45,11 @@ public partial class MainWindow : UiWindow, IRecipient<string>
 
     #region Public Methods
 
-    public void Receive(string message)
-    {
-        if (message == "Saved")
-            DataGrid.Items.Refresh();
-    }
-
     #endregion Public Methods
 
     #region Private Fields
 
-    readonly List<Button> _navigateButtons;
+    readonly List<Button> _navigateButtons = new();
 
     #endregion Private Fields
 
@@ -90,9 +84,6 @@ public partial class MainWindow : UiWindow, IRecipient<string>
             storyboard.Begin(currentButton);
             currentButton.IconFilled = true;
             ViewModel.EntityTypeName = (string)currentButton.Tag;
-            ViewModel.Refresh();
-            DataGrid.SetBinding(System.Windows.Controls.ItemsControl.ItemsSourceProperty, string.Join('.', nameof(ViewModel), $"{ViewModel.EntityTypeName}Collection"));
-            DataGrid.Items.Refresh();
         }
     }
 
@@ -109,10 +100,8 @@ public partial class MainWindow : UiWindow, IRecipient<string>
         }
     }
     private void OnSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-    {
-        if (ViewModel.IsNotBusy)
-            ViewModel.SelectedItems = DataGrid.SelectedItems.Count == 0 ? default : DataGrid.SelectedItems;
-    }
+        => ViewModel.SelectedItems = DataGrid.SelectedItems;
+
 
     private void OnThemeButtonClicked(object sender, RoutedEventArgs e)
     {

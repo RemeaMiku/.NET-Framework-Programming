@@ -8,6 +8,8 @@ namespace StudentManagemantSystem.Migrations
     /// <inheritdoc />
     public partial class InitialCreate : Migration
     {
+        #region Protected Methods
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -112,5 +114,7 @@ namespace StudentManagemantSystem.Migrations
             migrationBuilder.DropTable(
                 name: "SchoolTable");
         }
+
+        #endregion Protected Methods
     }
 }
