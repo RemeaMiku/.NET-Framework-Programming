@@ -353,26 +353,32 @@ public partial class MainWindowViewModel : ObservableObject
         }
     }
 
-    void RemoveStudent(Student student) => _dbContext!.StudentTable.Remove(student);
+    bool TryRemoveStudent(Student student)
+    {
+        _dbContext!.StudentTable.Remove(student);
+        return true;
+    }
 
-    void RemoveClass(Class @class)
+    bool TryRemoveClass(Class @class)
     {
         if (@class.Students is not null && @class.Students.Any())
         {
             _snackbarService.Show("删除被阻止", $"有学生属于 Id：{@class.Id}, Name：{@class.Name} 的班级。请先删除其学生或将学生转移至其他班级。", SymbolRegular.DeleteDismiss24, ControlAppearance.Caution);
-            return;
+            return false;
         }
         _dbContext!.ClassTable.Remove(@class);
+        return true;
     }
 
-    void RemoveSchool(School school)
+    bool TryRemoveSchool(School school)
     {
         if (school.Classes is not null && school.Classes.Any())
         {
             _snackbarService.Show("删除被阻止", $"有班级属于 Id：{school.Id}, Name：{school.Name} 的学校。请先删除其班级或将班级转移至其他学校。", SymbolRegular.DeleteDismiss24, ControlAppearance.Caution);
-            return;
+            return false;
         }
         _dbContext!.SchoolTable.Remove(school);
+        return true;
     }
 
     async Task RemoveSelectedItemsAsync()
@@ -384,12 +390,15 @@ public partial class MainWindowViewModel : ObservableObject
             for (int i = SelectedItems!.Count - 1; i >= 0; i--)
             {
                 var item = SelectedItems[i];
+                var successed = false;
                 if (item is Student student)
-                    RemoveStudent(student);
+                    successed = TryRemoveStudent(student);
                 else if (item is Class @class)
-                    RemoveClass(@class);
+                    successed = TryRemoveClass(@class);
                 else if (item is School school)
-                    RemoveSchool(school);
+                    successed = TryRemoveSchool(school);
+                if (!successed)
+                    return;
             }
         });
     }
