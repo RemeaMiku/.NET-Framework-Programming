@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
 
-namespace StudentManagemantSystem.Models;
+namespace SchaleStudentArchiveManagementSystem.Models;
 
 public class School
 {

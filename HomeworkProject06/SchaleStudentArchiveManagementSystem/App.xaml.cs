@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
-using StudentManagemantSystem.ViewModels;
+using SchaleStudentArchiveManagementSystem.ViewModels;
 using Wpf.Ui.Mvvm.Contracts;
 using Wpf.Ui.Mvvm.Services;
 
-namespace StudentManagemantSystem;
+namespace SchaleStudentArchiveManagementSystem;
 
 /// <summary>
 /// Interaction logic for App.xaml

@@ -2,20 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using StudentManagemantSystem.Data;
+using SchaleStudentArchiveManagementSystem.Data;
 
 #nullable disable
 
-namespace StudentManagemantSystem.Migrations
+namespace SchaleStudentArchiveManagementSystem.Migrations
 {
     [DbContext(typeof(StudentManagementDbContext))]
-    [Migration("20231027070113_InitialCreate")]
-    partial class InitialCreate
+    partial class StudentManagementDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.13");

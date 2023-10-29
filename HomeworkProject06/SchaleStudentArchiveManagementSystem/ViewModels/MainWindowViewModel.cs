@@ -13,12 +13,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using StudentManagemantSystem.Data;
-using StudentManagemantSystem.Models;
+using SchaleStudentArchiveManagementSystem.Data;
+using SchaleStudentArchiveManagementSystem.Models;
 using Wpf.Ui.Common;
 using Wpf.Ui.Mvvm.Contracts;
 
-namespace StudentManagemantSystem.ViewModels;
+namespace SchaleStudentArchiveManagementSystem.ViewModels;
 
 public partial class MainWindowViewModel : ObservableObject
 {
@@ -273,7 +273,7 @@ public partial class MainWindowViewModel : ObservableObject
     {
         _displayPropertyNameDic.Clear();
         DisplayNames.Clear();
-        var type = Type.GetType($"StudentManagemantSystem.Models.{EntityTypeName!}");
+        var type = Type.GetType($"SchaleStudentArchiveManagementSystem.Models.{EntityTypeName!}");
         var properties = type?.GetProperties();
         foreach (var property in properties!)
         {

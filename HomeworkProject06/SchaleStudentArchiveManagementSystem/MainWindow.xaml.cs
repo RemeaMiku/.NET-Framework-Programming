@@ -5,13 +5,13 @@ using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using StudentManagemantSystem.ViewModels;
+using SchaleStudentArchiveManagementSystem.ViewModels;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Common;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Mvvm.Contracts;
 
-namespace StudentManagemantSystem;
+namespace SchaleStudentArchiveManagementSystem;
 
 /// <summary>
 /// Interaction logic for MainWindow.xaml

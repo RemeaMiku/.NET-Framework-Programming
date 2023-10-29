@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace StudentManagemantSystem.Migrations
+namespace SchaleStudentArchiveManagementSystem.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

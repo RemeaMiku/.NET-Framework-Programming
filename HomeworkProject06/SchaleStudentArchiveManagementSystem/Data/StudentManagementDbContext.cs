@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using StudentManagemantSystem.Models;
+using SchaleStudentArchiveManagementSystem.Models;
 
-namespace StudentManagemantSystem.Data;
+namespace SchaleStudentArchiveManagementSystem.Data;
 
 public class StudentManagementDbContext : DbContext
 {

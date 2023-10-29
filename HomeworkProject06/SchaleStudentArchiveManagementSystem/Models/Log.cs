@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace StudentManagemantSystem.Models;
+namespace SchaleStudentArchiveManagementSystem.Models;
 
 public class Log
 {
