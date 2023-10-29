@@ -49,6 +49,7 @@ public partial class MainWindowViewModel : ObservableObject
     public CollectionViewSource DataGridViewSource { get; } = new();
 
     public CollectionViewSource LogViewSource { get; } = new();
+
     public bool IsNotBusy => !IsBusy;
 
     public ObservableCollection<string> DisplayNames { get; } = new();
@@ -63,7 +64,7 @@ public partial class MainWindowViewModel : ObservableObject
             if (value != _entityTypeName)
             {
                 _entityTypeName = value;
-                Reset();
+                ResetCommand.Execute(null);
                 UpdateSearchDisplayNames();
             }
         }
@@ -116,6 +117,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     string _dbPath = string.Empty;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsNotSearching))]
     bool _isSearching = false;
@@ -195,7 +197,7 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    async Task ConnectToDatabase()
+    async Task ConnectToDatabaseAsync()
     {
         if (!Path.Exists(DbPath))
         {
@@ -208,8 +210,8 @@ public partial class MainWindowViewModel : ObservableObject
         {
             IsBusy = true;
             InfoMessage = $"正在加载：{DbPath}";
-            await LoadDbContext();
-            Reset();
+            await LoadDbContextAsync();
+            await ResetAsync();
             UpdateSearchDisplayNames();
             DataGridViewSource.Filter += OnDataGridViewSourceFilter;
         }
@@ -223,7 +225,8 @@ public partial class MainWindowViewModel : ObservableObject
             IsBusy = false;
         }
     }
-    async Task LoadDbContext()
+
+    async Task LoadDbContextAsync()
     {
         _dbContext = new StudentManagementDbContext(DbPath);
         await _dbContext.StudentTable.LoadAsync();
@@ -233,7 +236,8 @@ public partial class MainWindowViewModel : ObservableObject
         _dbContext.ChangeTracker.StateChanged += OnChangeTrackerStateChanged;
         LogViewSource.Source = _dbContext.LogTable.Local.ToObservableCollection();
     }
-    private void OnDataGridViewSourceFilter(object sender, FilterEventArgs e)
+
+    void OnDataGridViewSourceFilter(object sender, FilterEventArgs e)
     {
         if (!IsSearching)
         {
@@ -247,8 +251,9 @@ public partial class MainWindowViewModel : ObservableObject
             .ToString()!
             .Contains(Keyword);
     }
+
     [RelayCommand]
-    async Task FilterLogs()
+    async Task FilterLogsAsync()
     {
         if (_dbContext is null)
             throw new InvalidOperationException("Not connected to the database.");
@@ -284,7 +289,7 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    void Reset()
+    async Task ResetAsync()
     {
         if (_dbContext is null)
             throw new InvalidOperationException("Not connected to the database.");
@@ -296,11 +301,15 @@ public partial class MainWindowViewModel : ObservableObject
             nameof(School) => _dbContext.SchoolTable.Local.ToObservableCollection(),
             _ => throw new NotImplementedException(),
         };
-        DataGridViewSource.View.Refresh();
+        IsBusy = true;
+        InfoMessage = $"正在加载 {DatabaseFileName}.{EntityTypeName}Table 表";
+        await App.Current.Dispatcher.InvokeAsync(DataGridViewSource.View.Refresh);
+        IsBusy = false;
         IsSearching = false;
         InfoMessage = DefaultInfoMessage;
     }
-    private void OnChangeTrackerStateChanged(object? sender, EntityStateChangedEventArgs e)
+
+    void OnChangeTrackerStateChanged(object? sender, EntityStateChangedEventArgs e)
     {
         if (_dbContext is null)
             throw new InvalidOperationException("Not connected to the database.");
@@ -322,6 +331,7 @@ public partial class MainWindowViewModel : ObservableObject
         };
         _dbContext.LogTable.Add(log);
     }
+
     [RelayCommand]
     void Add()
     {
@@ -365,7 +375,7 @@ public partial class MainWindowViewModel : ObservableObject
         _dbContext!.SchoolTable.Remove(school);
     }
 
-    async Task RemoveSelectedItems()
+    async Task RemoveSelectedItemsAsync()
     {
         if (_dbContext is null)
             throw new InvalidOperationException("Not connected to the database.");
@@ -385,7 +395,7 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    async Task Delete()
+    async Task DeleteAsync()
     {
         if (_dbContext is null)
             throw new InvalidOperationException("Not connected to the database.");
@@ -395,7 +405,7 @@ public partial class MainWindowViewModel : ObservableObject
         {
             IsBusy = true;
             InfoMessage = $"正在尝试删除 {SelectedItems!.Count} 项结果";
-            await RemoveSelectedItems();
+            await RemoveSelectedItemsAsync();
             DataGridViewSource.View.Refresh();
         }
         catch (Exception ex)
@@ -410,7 +420,7 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    async Task Save()
+    async Task SaveAsync()
     {
         if (_dbContext is null)
             throw new InvalidOperationException("Not connected to the database.");
@@ -443,7 +453,7 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    async Task Search()
+    async Task SearchAsync()
     {
         try
         {
