@@ -256,7 +256,6 @@
                                 Grid.Row="1"
                                 Margin="0,10,0,0"
                                 ItemsSource="{Binding ViewModel.LogViewSource.View}" />
-
                         </Grid>
                         <GridSplitter
                             Grid.Column="1"
@@ -288,8 +287,6 @@
                     <ui:Snackbar
                         x:Name="Snackbar"
                         Grid.Row="1"
-                        Grid.ColumnSpan="2"
-                        Margin="24,0,24,24"
                         Panel.ZIndex="1000"
                         Timeout="10000" />
                 </Grid>
